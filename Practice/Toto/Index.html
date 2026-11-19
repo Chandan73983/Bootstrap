@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <h1>My Todos</h1>
+
+    <!-- Input form -->
+    <form id="todo-form">
+      <input
+        type="text"
+        id="todo-input"
+        placeholder="What needs to be done?"
+        autocomplete="off"
+      />
+      <button type="submit">Add</button>
+    </form>
+
+    <!-- Filter tabs -->
+    <div class="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="done">Done</button>
+    </div>
+
+    <!-- List -->
+    <ul id="todo-list"></ul>
+
+    <!-- Empty state -->
+    <p id="empty-state" hidden>No todos yet. Add one above!</p>
+
+    <!-- Count -->
+    <p id="count"></p>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+body{background:linear-gradient(160deg,#232526,#414345);min-height:100vh;padding:1rem;font-family:system-ui;color:#fff;margin:0;overflow-x:hidden}
+body[data-bs-theme="light"]{background:linear-gradient(160deg,#ffecd2,#fcb69f);color:#1f2937}
+.app{max-width:440px;margin:0 auto}
+
+.mode-tabs{display:flex;background:rgba(255,255,255,.08);border-radius:50px;padding:4px;margin-bottom:1.5rem}
+body[data-bs-theme="light"] .mode-tabs{background:rgba(0,0,0,.06)}
+.mode-tab{flex:1;padding:.6rem .4rem;border-radius:50px;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s}
+body[data-bs-theme="light"] .mode-tab{color:#6b7280}
+.mode-tab.active{background:#fff;color:#1f2937}
+body[data-bs-theme="light"] .mode-tab.active{background:#1f2937;color:#fff}
+
+.timer-wrap{position:relative;width:280px;height:280px;margin:0 auto 1.5rem}
+.timer-ring{width:100%;height:100%;transform:rotate(-90deg)}
+.timer-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.ring-bg{stroke:rgba(255,255,255,.1)}
+body[data-bs-theme="light"] .ring-bg{stroke:rgba(0,0,0,.08)}
+.ring-fill{stroke:#ef4444;transition:stroke-dashoffset .5s linear,stroke .3s}
+body[data-bs-theme="light"] .ring-fill{stroke:#ef4444}
+
+.timer-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-time{font-size:3.5rem;font-weight:200;line-height:1;letter-spacing:-2px}
+.timer-label{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:.5rem;font-weight:700}
+body[data-bs-theme="light"] .timer-label{color:#6b7280}
+
+.controls{display:flex;gap:.75rem;justify-content:center;margin-bottom:1.5rem}
+.ctrl{width:56px;height:56px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+body[data-bs-theme="light"] .ctrl{background:rgba(0,0,0,.06);color:#1f2937}
+.ctrl:hover{background:rgba(255,255,255,.2)}
+body[data-bs-theme="light"] .ctrl:hover{background:rgba(0,0,0,.12)}
+.ctrl.primary{width:72px;height:72px;font-size:1.8rem;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 10px 30px rgba(239,68,68,.4)}
+.ctrl.primary:hover{transform:scale(1.05);background:linear-gradient(135deg,#ef4444,#dc2626)}
+.ctrl.active{background:#10b981;color:#fff}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem}
+.stat{background:rgba(255,255,255,.08);border-radius:14px;padding:.9rem .5rem;text-align:center;border:1px solid rgba(255,255,255,.1)}
+body[data-bs-theme="light"] .stat{background:rgba(255,255,255,.7);border-color:rgba(0,0,0,.06)}
+.stat-num{font-size:1.4rem;font-weight:800;color:#ef4444}
+.stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);font-weight:700;margin-top:2px}
+body[data-bs-theme="light"] .stat-lbl{color:#6b7280}
+
+.task-section{background:rgba(255,255,255,.08);border-radius:14px;padding:1rem;border:1px solid rgba(255,255,255,.1);margin-bottom:1rem}
+body[data-bs-theme="light"] .task-section{background:rgba(255,255,255,.7);border-color:rgba(0,0,0,.06)}
+.task-input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:10px;padding:.5rem .75rem;font-size:.9rem}
+body[data-bs-theme="light"] .task-input{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);color:#1f2937}
+.task-input:focus{background:rgba(255,255,255,.12);color:#fff;border-color:#ef4444;outline:none;box-shadow:none}
+body[data-bs-theme="light"] .task-input:focus{background:rgba(0,0,0,.06);color:#1f2937}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.app-title{font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:.4rem}
+.theme-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:1rem;cursor:pointer}
+body[data-bs-theme="light"] .theme-btn{background:rgba(0,0,0,.06);color:#1f2937}
+
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+@media(max-width:400px){.timer-wrap{width:240px;height:240px}.timer-time{font-size:3rem}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="app-title">🍅 Pomodoro</div>
+    <div style="display:flex;gap:.5rem">
+      <button class="theme-btn" id="soundBtn" title="Sound"><i class="bi bi-volume-up-fill"></i></button>
+      <button class="theme-btn" id="themeBtn" title="Theme"><i class="bi bi-sun"></i></button>
+    </div>
+  </div>
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="focus">Focus</button>
+    <button class="mode-tab" data-mode="short">Short Break</button>
+    <button class="mode-tab" data-mode="long">Long Break</button>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-wrap">
+    <svg class="timer-ring" viewBox="0 0 200 200">
+      <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
+      <circle class="ring-fill" id="ringFill" cx="100" cy="100" r="92"></circle>
+    </svg>
+    <div class="timer-content">
+      <div class="timer-time" id="timeDisplay">25:00</div>
+      <div class="timer-label" id="modeLabel">Focus Time</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="ctrl" id="resetBtn" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></button>
+    <button class="ctrl primary" id="playBtn" title="Start/Pause"><i class="bi bi-play-fill"></i></button>
+    <button class="ctrl" id="skipBtn" title="Skip"><i class="bi bi-skip-end-fill"></i></button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-num" id="statToday">0</div><div class="stat-lbl">Today</div></div>
+    <div class="stat"><div class="stat-num" id="statStreak">0</div><div class="stat-lbl">Streak</div></div>
+    <div class="stat"><div class="stat-num" id="statMinutes">0</div><div class="stat-lbl">Minutes</div></div>
+  </div>
+
+  <!-- Current task -->
+  <div class="task-section">
+    <label class="small fw-bold mb-2 d-block" style="opacity:.7">🎯 Current Task</label>
+    <input type="text" class="form-control task-input" id="taskInput" placeholder="What are you working on?" maxlength="80">
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================
+   POMODORO TIMER
+   ============================================ */
+
+// ---------- CONFIG ----------
+const MODES = {
+  focus:  { duration: 25 * 60, label: 'Focus Time',    color: '#ef4444' },
+  short:  { duration: 5  * 60, label: 'Short Break',   color: '#10b981' },
+  long:   { duration: 15 * 60, label: 'Long Break',    color: '#3b82f6' }
+};
+
+// ---------- STATE ----------
+let mode = 'focus';
+let timeLeft = MODES.focus.duration;
+let totalTime = MODES.focus.duration;
+let isRunning = false;
+let interval = null;
+let soundEnabled = true;
+let theme = localStorage.getItem('pomo-theme') || 'dark';
+let sessionCount = 0; // Focus sessions in current cycle (for long break rule)
+
+// Stats
+let stats = JSON.parse(localStorage.getItem('pomo-stats') || '{"today":0,"minutes":0,"streak":0,"date":""}');
+
+// ---------- ELEMENTS ----------
+const timeDisplay = document.getElementById('timeDisplay');
+const modeLabel = document.getElementById('modeLabel');
+const ringFill = document.getElementById('ringFill');
+const playBtn = document.getElementById('playBtn');
+
+// ---------- FORMAT ----------
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return m.toString().padStart(2,'0') + ':' + sec.toString().padStart(2,'0');
+}
+
+// ---------- RENDER ----------
+function render() {
+  timeDisplay.textContent = fmtTime(timeLeft);
+  modeLabel.textContent = MODES[mode].label;
+  
+  // Ring progress
+  const circumference = 2 * Math.PI * 92;
+  const progress = 1 - (timeLeft / totalTime);
+  ringFill.style.strokeDasharray = circumference;
+  ringFill.style.strokeDashoffset = circumference * (1 - progress);
+  ringFill.style.stroke = MODES[mode].color;
+
+  // Document title (browser tab pe time)
+  document.title = isRunning ? fmtTime(timeLeft) + ' — ' + MODES[mode].label : 'Pomodoro Timer';
+}
+
+// ---------- TIMER ----------
+function start() {
+  if (isRunning) return;
+  isRunning = true;
+  playBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+  interval = setInterval(tick, 1000);
+  render();
+}
+
+function pause() {
+  isRunning = false;
+  clearInterval(interval);
+  playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+  render();
+}
+
+function toggle() {
+  if (isRunning) pause();
+  else start();
+}
+
+function tick() {
+  timeLeft--;
+  if (timeLeft <= 0) {
+    completeSession();
+    return;
+  }
+  render();
+}
+
+function completeSession() {
+  pause();
+  timeLeft = 0;
+  render();
+  
+  // Play sound
+  if (soundEnabled) playBeep();
+  
+  // Show notification
+  notify();
+
+  // Update stats only for focus
+  if (mode === 'focus') {
+    const todayKey = new Date().toDateString();
+    if (stats.date !== todayKey) {
+      stats.streak = (stats.streak || 0) + 1;
+      stats.today = 0;
+      stats.minutes = 0;
+      stats.date = todayKey;
+    }
+    stats.today++;
+    stats.minutes += 25;
+    saveStats();
+    sessionCount++;
+  }
+
+  // Auto-switch to next mode
+  setTimeout(() => {
+    if (mode === 'focus') {
+      // Every 4 sessions = long break
+      if (sessionCount > 0 && sessionCount % 4 === 0) {
+        switchMode('long');
+      } else {
+        switchMode('short');
+      }
+    } else {
+      switchMode('focus');
+    }
+  }, 1500);
+}
+
+function reset() {
+  pause();
+  timeLeft = totalTime;
+  render();
+}
+
+function skip() {
+  pause();
+  if (mode === 'focus') {
+    switchMode(sessionCount % 4 === 3 ? 'long' : 'short');
+  } else {
+    switchMode('focus');
+  }
+}
+
+function switchMode(newMode) {
+  mode = newMode;
+  totalTime = MODES[mode].duration;
+  timeLeft = totalTime;
+  
+  // Update tabs
+  document.querySelectorAll('.mode-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === newMode);
+  });
+  
+  render();
+}
+
+// ---------- SOUND (Web Audio API) ----------
+function playBeep() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // 3 beeps
+    [0, 0.25, 0.5].forEach((delay, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.frequency.value = 800 + (i * 100); // Higher pitch each time
+      osc.type = 'sine';
+      
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
+      
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.2);
+    });
+  } catch (e) { console.log('Sound error:', e); }
+}
+
+// ---------- NOTIFICATION ----------
+function notify() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    const title = mode === 'focus' ? '🍅 Focus complete!' : '☕ Break over!';
+    const body = mode === 'focus' ? 'Time for a break.' : 'Back to work!';
+    try {
+      new Notification(title, { body, icon: '' });
+    } catch (e) {}
+  }
+}
+
+async function requestNotify() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    try { await Notification.requestPermission(); } catch (e) {}
+  }
+}
+
+// ---------- STATS ----------
+function saveStats() {
+  localStorage.setItem('pomo-stats', JSON.stringify(stats));
+  updateStatsUI();
+}
+
+function updateStatsUI() {
+  const todayKey = new Date().toDateString();
+  if (stats.date !== todayKey) {
+    // Day changed - reset today counter (but keep streak for display)
+    document.getElementById('statToday').textContent = '0';
+  } else {
+    document.getElementById('statToday').textContent = stats.today || 0;
+  }
+  document.getElementById('statStreak').textContent = stats.streak || 0;
+  document.getElementById('statMinutes').textContent = stats.minutes || 0;
+}
+
+// ---------- TASK ----------
+const taskInput = document.getElementById('taskInput');
+taskInput.value = localStorage.getItem('pomo-task') || '';
+taskInput.addEventListener('input', () => {
+  localStorage.setItem('pomo-task', taskInput.value);
+});
+
+// ---------- EVENT LISTENERS ----------
+playBtn.onclick = () => { requestNotify(); toggle(); };
+document.getElementById('resetBtn').onclick = reset;
+document.getElementById('skipBtn').onclick = skip;
+
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.onclick = () => {
+    pause();
+    switchMode(tab.dataset.mode);
+  };
+});
+
+// Sound toggle
+document.getElementById('soundBtn').onclick = () => {
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').innerHTML = soundEnabled 
+    ? '<i class="bi bi-volume-up-fill"></i>' 
+    : '<i class="bi bi-volume-mute-fill"></i>';
+  localStorage.setItem('pomo-sound', soundEnabled ? '1' : '0');
+};
+
+// Theme
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('pomo-theme', theme);
+  applyTheme();
+};
+
+// Space bar = play/pause
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+  if (e.key === 'r') reset();
+});
+
+// ---------- INIT ----------
+soundEnabled = localStorage.getItem('pomo-sound') !== '0';
+document.getElementById('soundBtn').innerHTML = soundEnabled 
+  ? '<i class="bi bi-volume-up-fill"></i>' 
+  : '<i class="bi bi-volume-mute-fill"></i>';
+
+applyTheme();
+switchMode('focus');
+updateStatsUI();
+</script>
+</body>
+</html>

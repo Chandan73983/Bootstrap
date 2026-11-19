@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simon Says</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:#0f172a;min-height:100vh;padding:1rem;font-family:system-ui;margin:0;display:flex;align-items:center;justify-content:center;color:#e5e7eb}
+body[data-bs-theme="light"]{background:#f1f5f9;color:#1e293b}
+
+.app{width:100%;max-width:400px;display:flex;flex-direction:column;gap:1.5rem;align-items:center}
+
+/* Header */
+.top-bar{width:100%;display:flex;justify-content:space-between;align-items:center}
+.app-title{font-size:1.5rem;font-weight:900;margin:0;color:#38bdf8;letter-spacing:1px}
+body[data-bs-theme="light"] .app-title{color:#0ea5e9}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:2px solid #334155;background:transparent;color:#94a3b8;font-size:1rem;cursor:pointer}
+body[data-bs-theme="light"] .icon-btn{border-color:#cbd5e1;color:#475569}
+
+/* Score Board */
+.score-board{display:flex;justify-content:space-between;width:100%;gap:1rem}
+.score-box{flex:1;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:.75rem;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+body[data-bs-theme="light"] .score-box{background:#fff;border-color:#e2e8f0;box-shadow:0 4px 10px rgba(0,0,0,0.05)}
+.score-label{font-size:.75rem;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:1px}
+.score-val{font-size:1.5rem;font-weight:900;color:#38bdf8;line-height:1.1}
+
+/* Game Board */
+.board-wrapper{position:relative;width:100%;aspect-ratio:1;max-width:350px;border-radius:50%;background:#1e293b;padding:15px;box-shadow:0 10px 30px rgba(0,0,0,0.5);border:4px solid #334155}
+body[data-bs-theme="light"] .board-wrapper{background:#e2e8f0;border-color:#cbd5e1;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+
+.board{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;width:100%;height:100%;border-radius:50%;overflow:hidden}
+
+/* Buttons */
+.color-btn{border:none;cursor:pointer;transition:filter .1s, transform .1s;opacity:0.8}
+.color-btn:active{transform:scale(0.95)}
+.color-btn.green{background:#22c55e;border-top-left-radius:100%}
+.color-btn.red{background:#ef4444;border-top-right-radius:100%}
+.color-btn.yellow{background:#eab308;border-bottom-left-radius:100%}
+.color-btn.blue{background:#3b82f6;border-bottom-right-radius:100%}
+
+/* Flash states (Animation) */
+.color-btn.active{opacity:1;filter:brightness(1.5);box-shadow:0 0 20px currentColor;z-index:2;transform:scale(1.02)}
+.color-btn.green.active{color:#22c55e}
+.color-btn.red.active{color:#ef4444}
+.color-btn.yellow.active{color:#eab308}
+.color-btn.blue.active{color:#3b82f6}
+
+/* Center Circle */
+.center-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:110px;height:110px;background:#0f172a;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:6px solid #1e293b;z-index:10}
+body[data-bs-theme="light"] .center-circle{background:#f1f5f9;border-color:#e2e8f0}
+
+#statusText{font-size:.8rem;font-weight:bold;color:#94a3b8;margin-bottom:.5rem;text-transform:uppercase}
+#startBtn{background:#38bdf8;color:#0f172a;border:none;border-radius:20px;padding:.4rem 1rem;font-weight:900;font-size:.85rem;cursor:pointer;transition:transform .1s}
+#startBtn:active{transform:scale(0.95)}
+#startBtn:disabled{background:#475569;color:#94a3b8;cursor:not-allowed}
+body[data-bs-theme="light"] #startBtn:disabled{background:#cbd5e1;color:#64748b}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(5px)}
+body[data-bs-theme="light"] .overlay{background:rgba(241,245,249,0.9)}
+.overlay.show{opacity:1;pointer-events:all}
+.modal-box{background:#1e293b;border:1px solid #334155;padding:2rem;border-radius:20px;text-align:center;max-width:300px;width:90%}
+body[data-bs-theme="light"] .modal-box{background:#fff;border-color:#e2e8f0}
+.modal-icon{font-size:3.5rem;margin-bottom:.5rem;display:block}
+.modal-title{font-weight:900;font-size:1.5rem;color:#ef4444;margin-bottom:.5rem}
+.modal-msg{font-size:.9rem;color:#94a3b8;margin-bottom:1.5rem}
+.btn-play{background:#38bdf8;color:#0f172a;border:none;padding:.75rem;border-radius:12px;font-weight:900;width:100%;font-size:1rem;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top-bar">
+    <h1 class="app-title">SIMON SAYS</h1>
+    <button class="icon-btn" id="themeBtn"><i class="bi bi-sun"></i></button>
+  </div>
+
+  <div class="score-board">
+    <div class="score-box">
+      <div class="score-label">Level</div>
+      <div class="score-val" id="levelDisplay">0</div>
+    </div>
+    <div class="score-box">
+      <div class="score-label">Best</div>
+      <div class="score-val" id="bestDisplay" style="color:#eab308">0</div>
+    </div>
+  </div>
+
+  <div class="board-wrapper">
+    <div class="board">
+      <button class="color-btn green" data-color="0"></button>
+      <button class="color-btn red" data-color="1"></button>
+      <button class="color-btn yellow" data-color="2"></button>
+      <button class="color-btn blue" data-color="3"></button>
+    </div>
+    
+    <div class="center-circle">
+      <div id="statusText">Ready?</div>
+      <button id="startBtn">START</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="gameOverOverlay">
+  <div class="modal-box">
+    <span class="modal-icon">💀</span>
+    <div class="modal-title">Game Over!</div>
+    <div class="modal-msg" id="gameOverMsg">You reached Level 5</div>
+    <button class="btn-play" id="playAgainBtn">Try Again</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================
+   SIMON SAYS
+   ============================================ */
+
+// ---------- CONFIG ----------
+const COLORS = ['green', 'red', 'yellow', 'blue'];
+const FREQS = [329.63, 261.63, 392.00, 196.00]; // E4, C4, G4, G3
+
+// ---------- STATE ----------
+let sequence = [];
+let userSequence = [];
+let level = 0;
+let bestScore = parseInt(localStorage.getItem('simon-best') || '0');
+let isPlaying = false;
+let isUserTurn = false;
+let audioCtx = null;
+let theme = localStorage.getItem('simon-theme') || 'dark';
+
+// DOM
+const buttons = document.querySelectorAll('.color-btn');
+const startBtn = document.getElementById('startBtn');
+const statusText = document.getElementById('statusText');
+const levelDisplay = document.getElementById('levelDisplay');
+const bestDisplay = document.getElementById('bestDisplay');
+const gameOverOverlay = document.getElementById('gameOverOverlay');
+
+bestDisplay.textContent = bestScore;
+
+// ---------- SOUND ----------
+function playTone(freq, duration = 0.4) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine'; // Smooth piano-like tone
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playErrorSound() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = 150;
+    osc.type = 'sawtooth';
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+  } catch(e) {}
+}
+
+// ---------- HELPERS ----------
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function flashButton(index) {
+  const btn = document.querySelector(`.color-btn[data-color="${index}"]`);
+  btn.classList.add('active');
+  playTone(FREQS[index]);
+  setTimeout(() => {
+    btn.classList.remove('active');
+  }, 300);
+}
+
+// ---------- GAME LOGIC ----------
+async function startGame() {
+  sequence = [];
+  userSequence = [];
+  level = 0;
+  isPlaying = true;
+  levelDisplay.textContent = '0';
+  startBtn.disabled = true;
+  gameOverOverlay.classList.remove('show');
+  
+  await sleep(500);
+  nextRound();
+}
+
+async function nextRound() {
+  if (!isPlaying) return;
+  
+  level++;
+  levelDisplay.textContent = level;
+  userSequence = [];
+  isUserTurn = false;
+  
+  // Add new random color to sequence
+  const randomColor = Math.floor(Math.random() * 4);
+  sequence.push(randomColor);
+  
+  statusText.textContent = 'Watch...';
+  await sleep(600);
+  
+  // Play sequence
+  for (let i = 0; i < sequence.length; i++) {
+    flashButton(sequence[i]);
+    await sleep(500); // Gap between colors
+  }
+  
+  // Now it's user's turn
+  statusText.textContent = 'Your Turn!';
+  isUserTurn = true;
+}
+
+function handleInput(index) {
+  if (!isUserTurn || !isPlaying) return;
+  
+  flashButton(index);
+  userSequence.push(index);
+  
+  // Check if correct so far
+  const currentStep = userSequence.length - 1;
+  if (userSequence[currentStep] !== sequence[currentStep]) {
+    // Wrong input
+    gameOver();
+    return;
+  }
+  
+  // Did they complete the sequence?
+  if (userSequence.length === sequence.length) {
+    isUserTurn = false;
+    statusText.textContent = 'Good!';
+    setTimeout(() => nextRound(), 1000);
+  }
+}
+
+function gameOver() {
+  isPlaying = false;
+  isUserTurn = false;
+  playErrorSound();
+  statusText.textContent = 'Wrong!';
+  
+  if (level > bestScore) {
+    bestScore = level;
+    localStorage.setItem('simon-best', bestScore);
+    bestDisplay.textContent = bestScore;
+  }
+  
+  setTimeout(() => {
+    document.getElementById('gameOverMsg').textContent = `You reached Level ${level}`;
+    gameOverOverlay.classList.add('show');
+  }, 500);
+}
+
+// ---------- EVENTS ----------
+buttons.forEach((btn, i) => {
+  btn.addEventListener('click', () => {
+    if (isUserTurn) {
+      // Add small visual feedback even if it's wrong
+      btn.style.filter = 'brightness(1.5)';
+      setTimeout(() => btn.style.filter = '', 150);
+    }
+    handleInput(i);
+  });
+});
+
+startBtn.onclick = startGame;
+document.getElementById('playAgainBtn').onclick = startGame;
+
+// Theme
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('simon-theme', theme);
+  applyTheme();
+};
+
+// Init
+applyTheme();
+</script>
+</body>
+</html>

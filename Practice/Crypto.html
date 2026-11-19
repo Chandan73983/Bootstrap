@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoTracker | Live Prices</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <style>
+    :root {
+      --positive: #16a34a;
+      --negative: #dc2626;
+    }
+    
+    body {
+      min-height: 100vh;
+      background-color: var(--bs-body-bg);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem 0 3rem;
+      border-radius: 0 0 30px 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .app-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
+    }
+    
+    .app-header > * { position: relative; z-index: 1; }
+    
+    /* Stats row */
+    .stat-mini {
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* Main content - pulls up over header */
+    .main-content {
+      margin-top: -2rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Coin table */
+    .coin-table {
+      background: var(--bs-body-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .coin-row {
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    
+    .coin-row:hover {
+      background: var(--bs-tertiary-bg);
+    }
+    
+    .coin-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    
+    .coin-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .coin-symbol {
+      font-size: 0.75rem;
+      color: var(--bs-secondary-color);
+      text-transform: uppercase;
+    }
+    
+    .price-cell { font-weight: 600; }
+    
+    .change-positive { color: var(--positive); }
+    .change-negative { color: var(--negative); }
+    
+    .change-badge {
+      padding: 0.3rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .change-badge.positive {
+      background: rgba(22, 163, 74, 0.1);
+      color: var(--positive);
+    }
+    
+    .change-badge.negative {
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--negative);
+    }
+    
+    /* Sparkline */
+    .sparkline {
+      width: 100px;
+      height: 32px;
+    }
+    
+    /* Favorite button */
+    .fav-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-size: 1.1rem;
+      padding: 0.25rem;
+      transition: all 0.2s;
+    }
+    
+    .fav-btn:hover { color: #fbbf24; transform: scale(1.15); }
+    .fav-btn.active { color: #fbbf24; }
+    
+    /* Toolbar */
+    .toolbar {
+      background: var(--bs-body-bg);
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
+    }
+    
+    .search-box {
+      border-radius: 50px;
+      padding-left: 2.5rem;
+      background: var(--bs-tertiary-bg);
+      border: 1px solid transparent;
+    }
+    
+    .search-box:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+    
+    .search-wrapper i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--bs-secondary-color);
+    }
+    
+    /* Loading */
+    .skeleton-row {
+      height: 60px;
+      background: linear-gradient(90deg, 
+        var(--bs-tertiary-bg) 25%, 
+        var(--bs-secondary-bg) 50%, 
+        var(--bs-tertiary-bg) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    /* Live indicator */
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16a34a;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    /* Modal */
+    .coin-detail-logo {
+      width: 64px;
+      height: 64px;
+    }
+    
+    /* Mobile card */
+    .coin-card {
+      padding: 1rem;
+      border-radius: 12px;
+      background: var(--bs-body-bg);
+      border: 1px solid var(--bs-border-color);
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+    
+    .coin-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    /* Range button */
+    .range-btn {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      border: 1px solid var(--bs-border-color);
+      background: transparent;
+      color: var(--bs-body-color);
+    }
+    
+    .range-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    /* Dark mode tweaks */
+    [data-bs-theme="dark"] .app-header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    }
+    
+    [data-bs-theme="dark"] .coin-table,
+    [data-bs-theme="dark"] .toolbar {
+      background: #1f2937;
+    }
+    
+    [data-bs-theme="dark"] .coin-row:hover {
+      background: #374151;
+    }
+    
+    /* Hide elements helper */
+    .d-contents { display: contents; }
+    
+    @media (max-width: 768px) {
+      .coin-table { display: none; }
+      .mobile-list { display: block !important; }
+    }
+    
+    @media (min-width: 769px) {
+      .mobile-list { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="app-header">
+    <div class="container">
+      
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-currency-bitcoin me-2"></i>CryptoTracker
+          </h2>
+          <small class="opacity-75">
+            <span class="live-dot"></span>Live prices • Auto-refresh every 60s
+          </small>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button class="btn btn-light btn-sm rounded-circle" id="refreshBtn" title="Refresh now" style="width: 40px; height: 40px;">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <button class="btn btn-light btn-sm rounded-circle" id="themeBtn" title="Toggle theme" style="width: 40px; height: 40px;">
+            <i class="bi bi-moon-stars" id="themeIcon"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Global Stats -->
+      <div class="row g-2">
+        <div class="col-6 col-md-3">
+          <div class="stat-mini">
+            <small class="opacity-75 d-block">Total Market Cap</small>
+            <strong class="fs-5" id="globalMarketCap">--</strong>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-mini">
+            <small class="opacity-75 d-block">24h Volume</small>
+            <strong class="fs-5" id="globalVolume">--</strong>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-mini">
+            <small class="opacity-75 d-block">BTC Dominance</small>
+            <strong class="fs-5" id="btcDominance">--</strong>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-mini">
+            <small class="opacity-75 d-block">Active Coins</small>
+            <strong class="fs-5" id="activeCoins">--</strong>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </header>
+
+  <!-- ==================== MAIN ==================== -->
+  <main class="container main-content pb-5">
+    
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        
+        <!-- Search -->
+        <div class="search-wrapper">
+          <i class="bi bi-search"></i>
+          <input 
+            type="text" 
+            class="form-control search-box" 
+            id="searchInput" 
+            placeholder="Search coin (Bitcoin, ETH, etc.)"
+          >
+        </div>
+        
+        <!-- Currency Select -->
+        <select class="form-select" id="currencySelect" style="width: auto;">
+          <option value="usd" selected>USD ($)</option>
+          <option value="inr">INR (₹)</option>
+          <option value="eur">EUR (€)</option>
+          <option value="gbp">GBP (£)</option>
+        </select>
+        
+        <!-- Sort -->
+        <select class="form-select" id="sortSelect" style="width: auto;">
+          <option value="market_cap_desc" selected>Market Cap ↓</option>
+          <option value="market_cap_asc">Market Cap ↑</option>
+          <option value="price_desc">Price ↓</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="change_desc">24h Change ↓</option>
+          <option value="change_asc">24h Change ↑</option>
+        </select>
+        
+        <!-- Favorites Filter -->
+        <button class="range-btn" id="favFilter">
+          <i class="bi bi-star-fill text-warning me-1"></i>Favorites
+        </button>
+        
+        <!-- Last Updated -->
+        <small class="text-muted ms-auto" id="lastUpdated"></small>
+        
+      </div>
+    </div>
+    
+    <!-- Desktop Table -->
+    <div class="coin-table" id="tableContainer">
+      
+      <!-- Table Header -->
+      <div class="row g-0 fw-semibold text-muted small border-bottom py-3 px-3" style="font-size: 0.8rem; text-transform: uppercase;">
+        <div class="col-1"></div>
+        <div class="col-4 col-md-3">Coin</div>
+        <div class="col-2 text-end">Price</div>
+        <div class="col-2 text-end d-none d-md-block">24h Change</div>
+        <div class="col-2 text-end d-none d-lg-block">Market Cap</div>
+        <div class="col-3 col-md-2 text-center d-none d-md-block">Last 7 Days</div>
+        <div class="col-3 col-md-2 text-end">Action</div>
+      </div>
+      
+      <!-- Table Body -->
+      <div id="coinList">
+        <!-- Skeleton rows -->
+        <div class="p-3">
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- Mobile List -->
+    <div class="mobile-list" id="mobileList" style="display: none;">
+      <!-- Rendered by JS -->
+    </div>
+    
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5 d-none">
+      <i class="bi bi-search display-1 text-muted opacity-25"></i>
+      <h5 class="fw-bold mt-3 mb-2">No coins found</h5>
+      <p class="text-muted small mb-0" id="emptyMessage">Try a different search term</p>
+    </div>
+    
+  </main>
+
+  <!-- ==================== COIN DETAIL MODAL ==================== -->
+  <div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-3">
+            <img id="modalLogo" class="coin-detail-logo" src="" alt="">
+            <div>
+              <h4 class="fw-bold mb-0" id="modalName">--</h4>
+              <small class="text-muted text-uppercase" id="modalSymbol">--</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modalContent">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <a href="#" target="_blank" class="btn btn-primary" id="modalWebsite">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Official Website
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* ============================================
+       CRYPTOTRACKER - CoinGecko API (No Key!)
+       ============================================ */
+
+    // ==================== CONFIG ====================
+    const API_BASE = 'https://api.coingecko.com/api/v3';
+    
+    // ==================== STATE ====================
+    let coins = [];
+    let filteredCoins = [];
+    let currency = 'usd';
+    let searchQuery = '';
+    let sortBy = 'market_cap_desc';
+    let showFavoritesOnly = false;
+    let favorites = JSON.parse(localStorage.getItem('crypto-favorites') || '[]');
+    let refreshInterval = null;
+    let globalData = null;
+    let abortController = null;
+
+    // ==================== DOM ====================
+    const coinListEl = document.getElementById('coinList');
+    const mobileListEl = document.getElementById('mobileList');
+    const emptyStateEl = document.getElementById('emptyState');
+    const emptyMessageEl = document.getElementById('emptyMessage');
+    const searchInput = document.getElementById('searchInput');
+    const currencySelect = document.getElementById('currencySelect');
+    const sortSelect = document.getElementById('sortSelect');
+    const favFilter = document.getElementById('favFilter');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const themeBtn = document.getElementById('themeBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const lastUpdatedEl = document.getElementById('lastUpdated');
+    const detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+
+    // ==================== CURRENCY SYMBOLS ====================
+    const CURRENCY_SYMBOLS = {
+      usd: '$', inr: '₹', eur: '€', gbp: '£'
+    };
+
+    // ==================== NUMBER FORMATTING ====================
+    function formatCurrency(value, curr = currency) {
+      if (value == null || isNaN(value)) return '--';
+      
+      const symbol = CURRENCY_SYMBOLS[curr] || '$';
+      
+      if (value >= 1e12) return symbol + (value / 1e12).toFixed(2) + 'T';
+      if (value >= 1e9) return symbol + (value / 1e9).toFixed(2) + 'B';
+      if (value >= 1e6) return symbol + (value / 1e6).toFixed(2) + 'M';
+      if (value >= 1e3) return symbol + (value / 1e3).toFixed(2) + 'K';
+      
+      if (value < 1) return symbol + value.toFixed(6);
+      return symbol + value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+
+    function formatPercent(value) {
+      if (value == null) return '--';
+      const sign = value >= 0 ? '+' : '';
+      return `${sign}${value.toFixed(2)}%`;
+    }
+
+    function formatFullNumber(value) {
+      if (value == null) return '--';
+      return value.toLocaleString('en-US');
+    }
+
+    // ==================== FETCH COINS ====================
+    async function fetchCoins(showLoader = true) {
+      if (abortController) abortController.abort();
+      abortController = new AbortController();
+
+      try {
+        if (showLoader) showSkeleton();
+        
+        refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i>';
+
+        const response = await fetch(
+          `${API_BASE}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=24h`,
+          { signal: abortController.signal }
+        );
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error('Rate limit reached. Please wait a moment.');
+          }
+          throw new Error(`Failed to fetch coins (${response.status})`);
+        }
+
+        coins = await response.json();
+        applyFiltersAndRender();
+        
+        const now = new Date();
+        lastUpdatedEl.innerHTML = `<i class="bi bi-check-circle text-success me-1"></i>Updated ${now.toLocaleTimeString()}`;
+
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        
+        console.error('Fetch error:', error);
+        if (showLoader) {
+          coinListEl.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-exclamation-triangle display-4 text-warning mb-3 d-block"></i>
+              <h5 class="fw-bold">Oops!</h5>
+              <p class="text-muted small mb-3">${error.message}</p>
+              <button class="btn btn-primary btn-sm" onclick="fetchCoins()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Try Again
+              </button>
+            </div>
+          `;
+        }
+      } finally {
+        refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
+      }
+    }
+
+    // ==================== FETCH GLOBAL DATA ====================
+    async function fetchGlobalData() {
+      try {
+        const res = await fetch(`${API_BASE}/global`);
+        if (!res.ok) return;
+        const data = await res.json();
+        globalData = data.data;
+        
+        document.getElementById('globalMarketCap').textContent = 
+          formatCurrency(globalData.total_market_cap[currency]);
+        document.getElementById('globalVolume').textContent = 
+          formatCurrency(globalData.total_volume[currency]);
+        document.getElementById('btcDominance').textContent = 
+          globalData.market_cap_percentage.btc.toFixed(1) + '%';
+        document.getElementById('activeCoins').textContent = 
+          formatFullNumber(globalData.active_cryptocurrencies);
+      } catch (error) {
+        console.error('Global data error:', error);
+      }
+    }
+
+    // ==================== SKELETON ====================
+    function showSkeleton() {
+      coinListEl.innerHTML = `
+        <div class="p-3">
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </div>
+      `;
+    }
+
+    // ==================== APPLY FILTERS & SORT ====================
+    function applyFiltersAndRender() {
+      // Filter
+      filteredCoins = coins.filter(coin => {
+        const matchesSearch = 
+          coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          coin.symbol.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const matchesFav = !showFavoritesOnly || favorites.includes(coin.id);
+        
+        return matchesSearch && matchesFav;
+      });
+
+      // Sort
+      const sortMap = {
+        market_cap_desc: (a, b) => b.market_cap - a.market_cap,
+        market_cap_asc: (a, b) => a.market_cap - b.market_cap,
+        price_desc: (a, b) => b.current_price - a.current_price,
+        price_asc: (a, b) => a.current_price - b.current_price,
+        change_desc: (a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0),
+        change_asc: (a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0)
+      };
+
+      filteredCoins.sort(sortMap[sortBy] || sortMap.market_cap_desc);
+
+      renderCoins();
+    }
+
+    // ==================== RENDER ====================
+    function renderCoins() {
+      if (filteredCoins.length === 0) {
+        coinListEl.innerHTML = '';
+        mobileListEl.innerHTML = '';
+        emptyStateEl.classList.remove('d-none');
+        emptyMessageEl.textContent = showFavoritesOnly 
+          ? 'No favorites yet. Click the star icon to add coins.'
+          : 'Try a different search term';
+        return;
+      }
+
+      emptyStateEl.classList.add('d-none');
+      renderDesktopTable();
+      renderMobileList();
+    }
+
+    function renderDesktopTable() {
+      coinListEl.innerHTML = filteredCoins.map((coin, i) => {
+        const change = coin.price_change_percentage_24h;
+        const isPositive = change >= 0;
+        const isFav = favorites.includes(coin.id);
+        const symbol = CURRENCY_SYMBOLS[currency] || '$';
+
+        return `
+          <div class="row g-0 coin-row align-items-center py-3 px-3 border-bottom" 
+               onclick="showDetail('${coin.id}')">
+            <div class="col-1">
+              <button class="fav-btn ${isFav ? 'active' : ''}" 
+                      onclick="event.stopPropagation(); toggleFavorite('${coin.id}')"
+                      title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+                <i class="bi bi-star${isFav ? '-fill' : ''}"></i>
+              </button>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="d-flex align-items-center gap-3">
+                <small class="text-muted d-none d-md-block" style="min-width: 20px;">${i + 1}</small>
+                <img src="${coin.image}" class="coin-logo" alt="${coin.name}" loading="lazy">
+                <div>
+                  <div class="coin-name">${coin.name}</div>
+                  <div class="coin-symbol">${coin.symbol}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-2 text-end">
+              <div class="price-cell">${symbol}${coin.current_price.toLocaleString('en-US', {maximumFractionDigits: coin.current_price < 1 ? 6 : 2})}</div>
+            </div>
+            <div class="col-2 text-end d-none d-md-block">
+              <span class="change-badge ${isPositive ? 'positive' : 'negative'}">
+                <i class="bi bi-caret-${isPositive ? 'up' : 'down'}-fill"></i>
+                ${Math.abs(change).toFixed(2)}%
+              </span>
+            </div>
+            <div class="col-2 text-end d-none d-lg-block">
+              <span class="text-muted small">${formatCurrency(coin.market_cap)}</span>
+            </div>
+            <div class="col-3 col-md-2 text-center d-none d-md-block">
+              ${coin.sparkline_in_7d ? renderSparkline(coin.sparkline_in_7d.price, isPositive) : ''}
+            </div>
+            <div class="col-3 col-md-2 text-end">
+              <button class="btn btn-sm btn-outline-primary rounded-pill" 
+                      onclick="event.stopPropagation(); showDetail('${coin.id}')">
+                Details
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMobileList() {
+      mobileListEl.innerHTML = filteredCoins.map(coin => {
+        const change = coin.price_change_percentage_24h;
+        const isPositive = change >= 0;
+        const isFav = favorites.includes(coin.id);
+        const symbol = CURRENCY_SYMBOLS[currency] || '$';
+
+        return `
+          <div class="coin-card" onclick="showDetail('${coin.id}')">
+            <div class="d-flex align-items-center gap-3">
+              <img src="${coin.image}" class="coin-logo" alt="${coin.name}" loading="lazy">
+              <div class="flex-grow-1 min-width-0">
+                <div class="coin-name">${coin.name}</div>
+                <div class="coin-symbol">${coin.symbol}</div>
+              </div>
+              <button class="fav-btn ${isFav ? 'active' : ''}" 
+                      onclick="event.stopPropagation(); toggleFavorite('${coin.id}')">
+                <i class="bi bi-star${isFav ? '-fill' : ''}"></i>
+              </button>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <div class="text-muted small">Price</div>
+                <strong>${symbol}${coin.current_price.toLocaleString('en-US', {maximumFractionDigits: coin.current_price < 1 ? 6 : 2})}</strong>
+              </div>
+              <div class="text-end">
+                <div class="text-muted small">24h Change</div>
+                <span class="change-badge ${isPositive ? 'positive' : 'negative'}">
+                  <i class="bi bi-caret-${isPositive ? 'up' : 'down'}-fill"></i>
+                  ${Math.abs(change).toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== SPARKLINE ====================
+    function renderSparkline(prices, isPositive) {
+      if (!prices || prices.length === 0) return '';
+      
+      const width = 100;
+      const height = 32;
+      const padding = 2;
+      
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const range = max - min || 1;
+      
+      const points = prices.map((price, i) => {
+        const x = (i / (prices.length - 1)) * (width - padding * 2) + padding;
+        const y = height - ((price - min) / range) * (height - padding * 2) - padding;
+        return `${x},${y}`;
+      }).join(' ');
+      
+      const color = isPositive ? '#16a34a' : '#dc2626';
+      
+      return `
+        <svg class="sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+
+    // ==================== FAVORITES ====================
+    window.toggleFavorite = function(id) {
+      const idx = favorites.indexOf(id);
+      if (idx > -1) {
+        favorites.splice(idx, 1);
+      } else {
+        favorites.push(id);
+      }
+      localStorage.setItem('crypto-favorites', JSON.stringify(favorites));
+      applyFiltersAndRender();
+    };
+
+    // ==================== DETAIL MODAL ====================
+    window.showDetail = async function(id) {
+      const coin = coins.find(c => c.id === id);
+      if (!coin) return;
+
+      const symbol = CURRENCY_SYMBOLS[currency] || '$';
+      const change = coin.price_change_percentage_24h;
+      const isPositive = change >= 0;
+
+      document.getElementById('modalLogo').src = coin.image;
+      document.getElementById('modalName').textContent = coin.name;
+      document.getElementById('modalSymbol').textContent = coin.symbol;
+      document.getElementById('modalWebsite').href = `https://www.coingecko.com/en/coins/${coin.id}`;
+
+      document.getElementById('modalContent').innerHTML = `
+        <div class="text-center mb-4">
+          <div class="display-4 fw-bold">${symbol}${coin.current_price.toLocaleString('en-US', {maximumFractionDigits: coin.current_price < 1 ? 6 : 2})}</div>
+          <span class="change-badge ${isPositive ? 'positive' : 'negative'} mt-2">
+            <i class="bi bi-caret-${isPositive ? 'up' : 'down'}-fill"></i>
+            ${formatPercent(change)} (24h)
+          </span>
+        </div>
+        
+        <div class="row g-3">
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">Market Cap</small>
+              <strong>${formatCurrency(coin.market_cap)}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">24h Volume</small>
+              <strong>${formatCurrency(coin.total_volume)}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">Rank</small>
+              <strong>#${coin.market_cap_rank}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">24h High</small>
+              <strong>${formatCurrency(coin.high_24h)}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">24h Low</small>
+              <strong>${formatCurrency(coin.low_24h)}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="p-3 bg-body-tertiary rounded-3">
+              <small class="text-muted d-block">All-Time High</small>
+              <strong>${formatCurrency(coin.ath)}</strong>
+            </div>
+          </div>
+        </div>
+        
+        ${coin.sparkline_in_7d ? `
+          <div class="mt-4">
+            <small class="text-muted d-block mb-2">Last 7 Days</small>
+            <div style="height: 80px;">${renderSparkline(coin.sparkline_in_7d.price, isPositive).replace('sparkline', 'w-100 h-100')}</div>
+          </div>
+        ` : ''}
+      `;
+
+      detailModal.show();
+    };
+
+    // ==================== THEME TOGGLE ====================
+    function initTheme() {
+      const saved = localStorage.getItem('crypto-theme') || 'light';
+      document.documentElement.setAttribute('data-bs-theme', saved);
+      updateThemeIcon(saved);
+    }
+
+    function updateThemeIcon(theme) {
+      themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
+    }
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-bs-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-bs-theme', next);
+      localStorage.setItem('crypto-theme', next);
+      updateThemeIcon(next);
+    });
+
+    // ==================== EVENT LISTENERS ====================
+    
+    // Search (debounced)
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchQuery = e.target.value;
+        applyFiltersAndRender();
+      }, 200);
+    });
+
+    // Currency
+    currencySelect.addEventListener('change', (e) => {
+      currency = e.target.value;
+      fetchCoins(true);
+      fetchGlobalData();
+    });
+
+    // Sort
+    sortSelect.addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      applyFiltersAndRender();
+    });
+
+    // Favorites filter
+    favFilter.addEventListener('click', () => {
+      showFavoritesOnly = !showFavoritesOnly;
+      favFilter.classList.toggle('active', showFavoritesOnly);
+      applyFiltersAndRender();
+    });
+
+    // Manual refresh
+    refreshBtn.addEventListener('click', () => {
+      fetchCoins(true);
+      fetchGlobalData();
+    });
+
+    // ==================== AUTO REFRESH ====================
+    function startAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      refreshInterval = setInterval(() => {
+        fetchCoins(false);
+        fetchGlobalData();
+      }, 60000); // 60 seconds
+    }
+
+    // Pause refresh when tab hidden (performance)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        clearInterval(refreshInterval);
+      } else {
+        fetchCoins(false);
+        fetchGlobalData();
+        startAutoRefresh();
+      }
+    });
+
+    // ==================== INITIALIZE ====================
+    initTheme();
+    fetchCoins(true);
+    fetchGlobalData();
+    startAutoRefresh();
+
+  </script>
+
+</body>
+</html>

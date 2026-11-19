@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Memory Match</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(135deg,#c2e59c,#64b3f4);min-height:100vh;padding:1rem;font-family:system-ui;margin:0;display:flex;align-items:center;justify-content:center;color:#1f2937}
+body[data-bs-theme="dark"]{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#e5e7eb}
+.app{width:100%;max-width:600px}
+
+/* Header */
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;background:#fff;padding:.75rem 1rem;border-radius:16px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+body[data-bs-theme="dark"] .top-bar{background:#1e293b;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+.app-title{font-weight:900;font-size:1.3rem;margin:0;display:flex;align-items:center;gap:.5rem}
+
+.stats{display:flex;gap:1rem;font-weight:700;font-size:.9rem}
+.stat-box{display:flex;align-items:center;gap:.3rem}
+.stat-box i{color:#64b3f4;font-size:1.1rem}
+body[data-bs-theme="dark"] .stat-box i{color:#38bdf8}
+
+/* Controls */
+.controls{display:flex;gap:.5rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap}
+.diff-btn{padding:.4rem 1rem;border-radius:50px;border:2px solid #fff;background:transparent;color:#fff;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s}
+body[data-bs-theme="dark"] .diff-btn{border-color:#475569;color:#cbd5e1}
+.diff-btn.active{background:#fff;color:#64b3f4;border-color:#fff}
+body[data-bs-theme="dark"] .diff-btn.active{background:#38bdf8;color:#0f172a;border-color:#38bdf8}
+.restart-btn{background:#ef4444;color:#fff;border:none;padding:.4rem 1rem;border-radius:50px;font-weight:700;font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:all .15s}
+.restart-btn:hover{background:#dc2626;transform:scale(1.05)}
+
+/* Game Board */
+.game-board{display:grid;gap:8px;perspective:1000px;margin:0 auto}
+.game-board.easy{grid-template-columns:repeat(4,1fr);max-width:400px}
+.game-board.medium{grid-template-columns:repeat(4,1fr);max-width:450px}
+.game-board.hard{grid-template-columns:repeat(5,1fr);max-width:500px}
+
+/* Card */
+.card-container{aspect-ratio:1;cursor:pointer;position:relative;width:100%}
+.card-inner{position:relative;width:100%;height:100%;transition:transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);transform-style:preserve-3d}
+.card-container.flipped .card-inner{transform:rotateY(180deg)}
+
+.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 10px rgba(0,0,0,0.15)}
+body[data-bs-theme="dark"] .card-face{box-shadow:0 4px 10px rgba(0,0,0,0.4)}
+
+.card-back{background:#fff;color:#64b3f4;border:2px solid #e2e8f0}
+body[data-bs-theme="dark"] .card-back{background:#1e293b;border-color:#334155;color:#38bdf8}
+.card-back i{opacity:0.5;font-size:1.5rem}
+
+.card-front{background:#f8fafc;transform:rotateY(180deg);border:2px solid #cbd5e1}
+body[data-bs-theme="dark"] .card-front{background:#0f172a;border-color:#475569}
+
+/* Matched State */
+.card-container.matched .card-inner{transform:rotateY(180deg)}
+.card-container.matched .card-front{background:#d1fae5;border-color:#10b981;animation:pop 0.4s}
+body[data-bs-theme="dark"] .card-container.matched .card-front{background:#064e3b;border-color:#10b981}
+@keyframes pop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.1)}100%{transform:rotateY(180deg) scale(1)}}
+
+/* Shake on wrong */
+.card-container.wrong .card-inner{animation:shake 0.4s}
+@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-5px)}75%{transform:rotateY(180deg) translateX(5px)}}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;backdrop-filter:blur(5px);padding:1rem}
+.overlay.show{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:20px;padding:2rem;text-align:center;max-width:350px;width:100%;transform:scale(0.8);transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+body[data-bs-theme="dark"] .modal-box{background:#1e293b}
+.overlay.show .modal-box{transform:scale(1)}
+.modal-icon{font-size:3.5rem;margin-bottom:1rem;display:block}
+.modal-title{font-weight:900;font-size:1.5rem;margin-bottom:.5rem}
+.modal-stats{display:flex;justify-content:center;gap:1.5rem;margin:1rem 0;font-weight:700}
+.modal-stats div{display:flex;flex-direction:column;align-items:center}
+.modal-stats span{font-size:1.2rem;color:#64b3f4}
+body[data-bs-theme="dark"] .modal-stats span{color:#38bdf8}
+.btn-play{background:linear-gradient(135deg,#64b3f4,#3b82f6);color:#fff;border:none;padding:.75rem 2rem;border-radius:50px;font-weight:800;font-size:1rem;cursor:pointer;margin-top:1rem;width:100%;transition:transform .15s}
+.btn-play:hover{transform:translateY(-2px)}
+
+.theme-btn{position:absolute;top:1rem;right:1rem;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:#fff;font-size:1.1rem;cursor:pointer;backdrop-filter:blur(5px)}
+body[data-bs-theme="dark"] .theme-btn{background:rgba(0,0,0,0.3)}
+</style>
+</head>
+<body>
+<button class="theme-btn" id="themeBtn"><i class="bi bi-moon-stars"></i></button>
+
+<div class="app">
+  
+  <div class="top-bar">
+    <h1 class="app-title">🃏 Memory</h1>
+    <div class="stats">
+      <div class="stat-box"><i class="bi bi-clock-history"></i> <span id="timeDisplay">00:00</span></div>
+      <div class="stat-box"><i class="bi bi-arrow-left-right"></i> <span id="movesDisplay">0</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="diff-btn active" data-diff="easy">4x4</button>
+    <button class="diff-btn" data-diff="medium">4x5</button>
+    <button class="diff-btn" data-diff="hard">5x6</button>
+    <button class="restart-btn" id="restartBtn"><i class="bi bi-arrow-clockwise"></i></button>
+  </div>
+
+  <div class="game-board easy" id="gameBoard">
+    <!-- Cards generated by JS -->
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal-box">
+    <span class="modal-icon" id="winIcon">🏆</span>
+    <div class="modal-title" id="winTitle">You Won!</div>
+    <p style="color:#6b7280;font-size:.9rem" id="winMsg">Great job remembering!</p>
+    
+    <div class="modal-stats">
+      <div><small>Time</small><span id="finalTime">00:00</span></div>
+      <div><small>Moves</small><span id="finalMoves">0</span></div>
+    </div>
+    
+    <button class="btn-play" id="playAgainBtn">Play Again</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================
+   MEMORY MATCH GAME
+   ============================================ */
+
+// ---------- CONFIG ----------
+const EMOJIS = ['🍎','🍌','🍇','🍓','🍒','🍑','🥝','🥥','🍍','🥭','🍉','🍋','🥕','🍄','🌽','🥦','🍅','🍆','🍇','🍎']; 
+// Max 20 unique pairs (40 cards) needed for 5x6 (30 cards = 15 pairs)
+// I provided 20+ but we'll slice based on difficulty.
+
+const LEVELS = {
+  easy: { cols: 4, rows: 4, pairs: 8 },    // 16 cards
+  medium: { cols: 4, rows: 5, pairs: 10 }, // 20 cards
+  hard: { cols: 5, rows: 6, pairs: 15 }    // 30 cards
+};
+
+// ---------- STATE ----------
+let cards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let moves = 0;
+let currentLevel = 'easy';
+let timer = null;
+let timeElapsed = 0;
+let isPlaying = false;
+let isLocked = false;
+let theme = localStorage.getItem('mem-theme') || 'light';
+
+// Audio Context for sounds
+let audioCtx = null;
+
+// ---------- INITIALIZATION ----------
+function initGame(level = 'easy') {
+  currentLevel = level;
+  const config = LEVELS[level];
+  
+  // Reset state
+  clearInterval(timer);
+  flippedCards = [];
+  matchedPairs = 0;
+  moves = 0;
+  timeElapsed = 0;
+  isPlaying = false;
+  isLocked = false;
+  
+  document.getElementById('movesDisplay').textContent = '0';
+  document.getElementById('timeDisplay').textContent = '00:00';
+  document.getElementById('overlay').classList.remove('show');
+  
+  // Update UI classes
+  document.querySelectorAll('.diff-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.diff === level);
+  });
+  const boardEl = document.getElementById('gameBoard');
+  boardEl.className = `game-board ${level}`;
+  
+  // Get emojis for this level
+  const selectedEmojis = EMOJIS.slice(0, config.pairs);
+  cards = [...selectedEmojis, ...selectedEmojis];
+  
+  // Shuffle (Fisher-Yates)
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  
+  // Render
+  boardEl.innerHTML = '';
+  cards.forEach((emoji, index) => {
+    const card = document.createElement('div');
+    card.className = 'card-container';
+    card.dataset.emoji = emoji;
+    card.dataset.index = index;
+    
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back"><i class="bi bi-question-lg"></i></div>
+        <div class="card-face card-front">${emoji}</div>
+      </div>
+    `;
+    
+    card.addEventListener('click', () => flipCard(card));
+    boardEl.appendChild(card);
+  });
+}
+
+// ---------- GAME LOGIC ----------
+function flipCard(card) {
+  if (isLocked) return;
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  
+  // Start timer on first click
+  if (!isPlaying) {
+    startTimer();
+    isPlaying = true;
+  }
+  
+  playSound('flip');
+  card.classList.add('flipped');
+  flippedCards.push(card);
+  
+  if (flippedCards.length === 2) {
+    moves++;
+    document.getElementById('movesDisplay').textContent = moves;
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const [card1, card2] = flippedCards;
+  const isMatch = card1.dataset.emoji === card2.dataset.emoji;
+  
+  if (isMatch) {
+    // Matched
+    setTimeout(() => {
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+      playSound('match');
+      matchedPairs++;
+      flippedCards = [];
+      checkWin();
+    }, 400);
+  } else {
+    // Not matched
+    isLocked = true;
+    setTimeout(() => {
+      card1.classList.add('wrong');
+      card2.classList.add('wrong');
+      playSound('wrong');
+      
+      setTimeout(() => {
+        card1.classList.remove('flipped', 'wrong');
+        card2.classList.remove('flipped', 'wrong');
+        flippedCards = [];
+        isLocked = false;
+      }, 500);
+    }, 500);
+  }
+}
+
+function checkWin() {
+  const config = LEVELS[currentLevel];
+  if (matchedPairs === config.pairs) {
+    clearInterval(timer);
+    playSound('win');
+    setTimeout(showWinScreen, 600);
+  }
+}
+
+// ---------- TIMER ----------
+function startTimer() {
+  clearInterval(timer);
+  timeElapsed = 0;
+  timer = setInterval(() => {
+    timeElapsed++;
+    document.getElementById('timeDisplay').textContent = formatTime(timeElapsed);
+  }, 1000);
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// ---------- WIN SCREEN ----------
+function showWinScreen() {
+  document.getElementById('finalTime').textContent = formatTime(timeElapsed);
+  document.getElementById('finalMoves').textContent = moves;
+  
+  // Difficulty message
+  const msgs = {
+    easy: 'Easy mode cleared!',
+    medium: 'Medium mode cleared! Nice memory!',
+    hard: 'Hard mode cleared! You are a memory master! 🧠'
+  };
+  document.getElementById('winMsg').textContent = msgs[currentLevel];
+  
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ---------- SOUND ----------
+function playSound(type) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    
+    let freq = 400, dur = 0.1, wave = 'sine';
+    
+    if (type === 'flip') { freq = 500; dur = 0.05; wave = 'triangle'; }
+    if (type === 'match') { freq = 800; dur = 0.15; wave = 'sine'; }
+    if (type === 'wrong') { freq = 200; dur = 0.2; wave = 'sawtooth'; }
+    if (type === 'win') { 
+      // Play chord
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0, audioCtx.currentTime + i*0.1);
+        g.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + i*0.1 + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.1 + 0.5);
+        o.start(audioCtx.currentTime + i*0.1);
+        o.stop(audioCtx.currentTime + i*0.1 + 0.5);
+      });
+      return;
+    }
+    
+    osc.frequency.value = freq;
+    osc.type = wave;
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+// ---------- THEME ----------
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('mem-theme', theme);
+  applyTheme();
+};
+
+// ---------- EVENTS ----------
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    initGame(btn.dataset.diff);
+  });
+});
+
+document.getElementById('restartBtn').onclick = () => {
+  initGame(currentLevel);
+};
+
+document.getElementById('playAgainBtn').onclick = () => {
+  initGame(currentLevel);
+};
+
+// ---------- START ----------
+applyTheme();
+initGame('easy');
+</script>
+</body>
+</html>

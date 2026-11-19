@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+body{background:linear-gradient(135deg,#1e3c72,#2a5298);min-height:100vh;padding:1rem;font-family:system-ui}
+.app{max-width:640px;margin:0 auto}
+.card-glass{background:#fff;border-radius:20px;padding:1.25rem;box-shadow:0 10px 30px rgba(0,0,0,.15);margin-bottom:1rem}
+.balance-box{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;border-radius:16px;padding:1.25rem;text-align:center}
+.balance-num{font-size:2.2rem;font-weight:800}
+.mini-stat{padding:.75rem;border-radius:12px;text-align:center}
+.mini-stat.income{background:#d1fae5;color:#065f46}
+.mini-stat.expense{background:#fee2e2;color:#991b1b}
+.mini-stat .num{font-size:1.3rem;font-weight:800}
+.mini-stat .lbl{font-size:.75rem;font-weight:600}
+.tx-row{display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:12px;background:#f8f9fa;margin-bottom:.5rem}
+.tx-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.tx-icon.income{background:#d1fae5;color:#10b981}
+.tx-icon.expense{background:#fee2e2;color:#ef4444}
+.tx-amount{font-weight:800}
+.tx-amount.income{color:#10b981}
+.tx-amount.expense{color:#ef4444}
+.chart-box{position:relative;height:220px}
+.fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#1e3c72;color:#fff;border:none;font-size:1.5rem;box-shadow:0 8px 20px rgba(30,60,114,.4);z-index:100}
+.empty{text-align:center;padding:2rem;color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="card-glass">
+    <div class="d-flex justify-content-between align-items-center">
+      <h4 class="fw-bold mb-0">💰 Expense Tracker</h4>
+      <button class="btn btn-light" id="themeBtn"><i class="bi bi-moon-stars"></i></button>
+    </div>
+  </div>
+
+  <!-- Balance -->
+  <div class="card-glass p-0">
+    <div class="balance-box m-0">
+      <small class="opacity-75">Current Balance</small>
+      <div class="balance-num" id="balance">₹0</div>
+      <div class="row g-2 mt-3">
+        <div class="col-6"><div class="mini-stat income"><div class="num" id="totalIncome">₹0</div><div class="lbl">⬆ Income</div></div></div>
+        <div class="col-6"><div class="mini-stat expense"><div class="num" id="totalExpense">₹0</div><div class="lbl">⬇ Expense</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card-glass">
+    <h6 class="fw-bold mb-3">📊 Category Breakdown</h6>
+    <div class="chart-box"><canvas id="pieChart"></canvas></div>
+  </div>
+
+  <div class="card-glass">
+    <h6 class="fw-bold mb-3">📈 Last 6 Months</h6>
+    <div class="chart-box"><canvas id="barChart"></canvas></div>
+  </div>
+
+  <!-- Transactions -->
+  <div class="card-glass">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="fw-bold mb-0">Transactions</h6>
+      <select class="form-select form-select-sm" id="filterType" style="width:auto">
+        <option value="all">All</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+    </div>
+    <div id="txList"></div>
+  </div>
+
+</div>
+
+<button class="fab" id="addBtn"><i class="bi bi-plus-lg"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ---------- STATE ----------
+let txs = JSON.parse(localStorage.getItem('txs') || '[]');
+let theme = localStorage.getItem('exp-theme') || 'light';
+let pieChart = null, barChart = null;
+let filter = 'all';
+
+// ---------- CATEGORIES ----------
+const CATS = {
+  income: ['Salary','Business','Gift','Other'],
+  expense: ['Food','Transport','Shopping','Bills','Entertainment','Health','Other']
+};
+const CAT_COLORS = {
+  Salary:'#10b981', Business:'#059669', Gift:'#34d399', 
+  Food:'#ef4444', Transport:'#3b82f6', Shopping:'#8b5cf6',
+  Bills:'#f59e0b', Entertainment:'#ec4899', Health:'#06b6d4',
+  Other:'#6b7280'
+};
+
+// ---------- HELPERS ----------
+function save() { localStorage.setItem('txs', JSON.stringify(txs)); }
+function fmt(n) { return '₹' + Math.abs(n).toLocaleString('en-IN'); }
+function todayStr() { const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+
+// ---------- RENDER ----------
+function render() {
+  // Totals
+  const income = txs.filter(t => t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t => t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = income - expense;
+  document.getElementById('balance').textContent = (balance<0?'-':'') + fmt(balance);
+  document.getElementById('totalIncome').textContent = fmt(income);
+  document.getElementById('totalExpense').textContent = fmt(expense);
+
+  renderPie();
+  renderBar();
+  renderTxList();
+}
+
+function renderPie() {
+  const expenseTx = txs.filter(t => t.type==='expense');
+  const catTotals = {};
+  expenseTx.forEach(t => { catTotals[t.category] = (catTotals[t.category]||0) + t.amount; });
+
+  const labels = Object.keys(catTotals);
+  const data = Object.values(catTotals);
+  const colors = labels.map(l => CAT_COLORS[l] || '#6b7280');
+
+  if (pieChart) pieChart.destroy();
+
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  if (labels.length === 0) {
+    ctx.clearRect(0,0,300,220);
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('No expense data yet', 300, 110);
+    return;
+  }
+
+  pieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+function renderBar() {
+  const months = [];
+  const incomeData = [], expenseData = [];
+  const now = new Date();
+
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label = d.toLocaleDateString('en-US',{month:'short'});
+    months.push(label);
+
+    const monthTx = txs.filter(t => {
+      const td = new Date(t.date);
+      const tKey = td.getFullYear()+'-'+String(td.getMonth()+1).padStart(2,'0');
+      return tKey === key;
+    });
+    incomeData.push(monthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
+    expenseData.push(monthTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
+  }
+
+  if (barChart) barChart.destroy();
+  const ctx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Income', data: incomeData, backgroundColor: '#10b981', borderRadius: 6 },
+        { label: 'Expense', data: expenseData, backgroundColor: '#ef4444', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } }
+    }
+  });
+}
+
+function renderTxList() {
+  let list = txs.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (filter !== 'all') list = list.filter(t => t.type === filter);
+
+  const el = document.getElementById('txList');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty"><i class="bi bi-inbox display-4 d-block mb-2 opacity-25"></i>No transactions</div>';
+    return;
+  }
+
+  el.innerHTML = list.map((t,i) => {
+    const idx = txs.indexOf(t);
+    return '<div class="tx-row">' +
+      '<div class="tx-icon ' + t.type + '"><i class="bi bi-' + (t.type==='income'?'arrow-down':'arrow-up') + '-circle"></i></div>' +
+      '<div class="flex-grow-1"><div class="fw-bold small">' + t.category + '</div>' +
+      '<div class="text-muted" style="font-size:.75rem">' + new Date(t.date).toLocaleDateString() + (t.note?' • '+t.note:'') + '</div></div>' +
+      '<div class="text-end"><div class="tx-amount ' + t.type + '">' + (t.type==='income'?'+':'-') + fmt(t.amount) + '</div>' +
+      '<button class="btn btn-sm btn-link text-danger p-0" data-del="' + idx + '"><i class="bi bi-trash" style="font-size:.8rem"></i></button></div>' +
+    '</div>';
+  }).join('');
+
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delTx(parseInt(b.dataset.del)));
+}
+
+// ---------- ACTIONS ----------
+function addTx() {
+  const type = prompt('Type?\n1 = Income\n2 = Expense\n\nEnter 1 or 2:');
+  if (type !== '1' && type !== '2') return;
+  const isIncome = type === '1';
+
+  const cats = isIncome ? CATS.income : CATS.expense;
+  const catStr = cats.map((c,i) => (i+1)+'. '+c).join('\n');
+  const catChoice = prompt('Category?\n'+catStr+'\n\nEnter number:');
+  const catIdx = parseInt(catChoice) - 1;
+  if (!cats[catIdx]) return;
+  const category = cats[catIdx];
+
+  const amountStr = prompt('Amount (₹):');
+  const amount = parseFloat(amountStr);
+  if (!amount || amount <= 0) return;
+
+  const note = prompt('Note (optional):') || '';
+
+  txs.push({
+    type: isIncome ? 'income' : 'expense',
+    category, amount, note,
+    date: new Date().toISOString()
+  });
+  save();
+  render();
+}
+
+function delTx(idx) {
+  if (!confirm('Delete this transaction?')) return;
+  txs.splice(idx, 1);
+  save();
+  render();
+}
+
+// ---------- THEME ----------
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme==='dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme==='dark' ? 'light' : 'dark';
+  localStorage.setItem('exp-theme', theme);
+  applyTheme();
+};
+
+// ---------- EVENTS ----------
+document.getElementById('addBtn').onclick = addTx;
+document.getElementById('filterType').onchange = e => { filter = e.target.value; renderTxList(); };
+
+// ---------- INIT ----------
+applyTheme();
+render();
+</script>
+</body>
+</html>

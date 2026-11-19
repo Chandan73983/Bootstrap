@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopvora — Logo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a15;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+        }
+
+        .section-title {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-box {
+            width: 100%;
+            max-width: 560px;
+            background: #12121f;
+            padding: 40px 20px;
+            border-radius: 20px;
+            border: 1px solid #1f1f33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo-box.light {
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+        }
+
+        .logo-svg {
+            width: 100%;
+            height: auto;
+            max-width: 480px;
+            display: block;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .app-item {
+            background: #12121f;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #1f1f33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-icon {
+            width: 100%;
+            height: auto;
+            max-width: 120px;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .swatch {
+            text-align: center;
+        }
+
+        .swatch .color {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            margin-bottom: 8px;
+        }
+
+        .swatch p {
+            color: #888;
+            font-size: 10px;
+            letter-spacing: 0.3px;
+            line-height: 1.4;
+        }
+
+        .swatch p b {
+            color: #fff;
+            font-size: 11px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            body {
+                padding: 30px 15px;
+                gap: 40px;
+            }
+
+            .logo-box {
+                padding: 30px 15px;
+                border-radius: 15px;
+            }
+
+            .app-grid {
+                gap: 15px;
+            }
+
+            .app-item {
+                padding: 15px;
+                border-radius: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 12px;
+                gap: 30px;
+            }
+
+            .logo-box {
+                padding: 25px 12px;
+                border-radius: 12px;
+            }
+
+            .section-title {
+                font-size: 10px;
+                letter-spacing: 2px;
+            }
+
+            .app-grid {
+                gap: 10px;
+            }
+
+            .app-item {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .palette {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            body {
+                padding: 15px 10px;
+                gap: 25px;
+            }
+
+            .app-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .app-item {
+                padding: 8px;
+            }
+
+            .palette {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .logo-box {
+                max-width: 700px;
+                padding: 50px 60px;
+            }
+
+            .logo-svg {
+                max-width: 600px;
+            }
+
+            .app-grid, .palette {
+                max-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================== -->
+    <!-- PRIMARY LOGO -->
+    <!-- ============================================== -->
+    <div class="section">
+        <p class="section-title">◈ Primary Logo</p>
+        <div class="logo-box">
+            <svg class="logo-svg" viewBox="0 0 500 140" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#10b981"/>
+                        <stop offset="50%" stop-color="#059669"/>
+                        <stop offset="100%" stop-color="#0d9488"/>
+                    </linearGradient>
+                    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fbbf24"/>
+                        <stop offset="100%" stop-color="#f59e0b"/>
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- ICON: Shopping Bag + S -->
+                <g transform="translate(20, 30)" filter="url(#glow)">
+                    <!-- Hexagon background -->
+                    <path d="M 40 0 L 75 20 L 75 60 L 40 80 L 5 60 L 5 20 Z"
+                          fill="url(#iconGrad)" opacity="0.15"/>
+                    
+                    <!-- Shopping Bag -->
+                    <path d="M 22 32 L 58 32 L 62 68 L 18 68 Z"
+                          fill="none" stroke="url(#iconGrad)" stroke-width="4"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                    
+                    <!-- Bag Handle -->
+                    <path d="M 28 32 L 28 24 Q 28 16 40 16 Q 52 16 52 24 L 52 32"
+                          fill="none" stroke="url(#iconGrad)" stroke-width="4"
+                          stroke-linecap="round"/>
+                    
+                    <!-- S inside bag -->
+                    <path d="M 32 44 L 48 44 L 38 52 L 48 52 L 34 60"
+                          fill="none" stroke="url(#iconGrad)" stroke-width="3"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+
+                <!-- TEXT -->
+                <text x="130" y="82" font-family="'Inter', 'Segoe UI', sans-serif"
+                      font-size="54" font-weight="800" fill="#ffffff" letter-spacing="-1.5">
+                    Shop<tspan fill="url(#mainGrad)">vora</tspan>
+                </text>
+
+                <!-- Tagline -->
+                <text x="132" y="105" font-family="'Inter', sans-serif"
+                      font-size="11" font-weight="600" fill="#666" letter-spacing="4">
+                    PREMIUM SHOPPING · EVERY DAY
+                </text>
+
+                <!-- Accent dot -->
+                <circle cx="365" cy="65" r="4" fill="#10b981"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- LIGHT VERSION -->
+    <!-- ============================================== -->
+    <div class="section">
+        <p class="section-title">◈ Light Version</p>
+        <div class="logo-box light">
+            <svg class="logo-svg" viewBox="0 0 500 140" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mainGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#059669"/>
+                        <stop offset="50%" stop-color="#0d9488"/>
+                        <stop offset="100%" stop-color="#0891b2"/>
+                    </linearGradient>
+                    <linearGradient id="iconGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f59e0b"/>
+                        <stop offset="100%" stop-color="#d97706"/>
+                    </linearGradient>
+                </defs>
+
+                <g transform="translate(20, 30)">
+                    <path d="M 40 0 L 75 20 L 75 60 L 40 80 L 5 60 L 5 20 Z"
+                          fill="url(#iconGrad2)" opacity="0.12"/>
+                    <path d="M 22 32 L 58 32 L 62 68 L 18 68 Z"
+                          fill="none" stroke="url(#iconGrad2)" stroke-width="4"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M 28 32 L 28 24 Q 28 16 40 16 Q 52 16 52 24 L 52 32"
+                          fill="none" stroke="url(#iconGrad2)" stroke-width="4"
+                          stroke-linecap="round"/>
+                    <path d="M 32 44 L 48 44 L 38 52 L 48 52 L 34 60"
+                          fill="none" stroke="url(#iconGrad2)" stroke-width="3"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+
+                <text x="130" y="82" font-family="'Inter', sans-serif"
+                      font-size="54" font-weight="800" fill="#111827" letter-spacing="-1.5">
+                    Shop<tspan fill="url(#mainGrad2)">vora</tspan>
+                </text>
+
+                <text x="132" y="105" font-family="'Inter', sans-serif"
+                      font-size="11" font-weight="600" fill="#9ca3af" letter-spacing="4">
+                    PREMIUM SHOPPING · EVERY DAY
+                </text>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- APP ICONS -->
+    <!-- ============================================== -->
+    <div class="section">
+        <p class="section-title">◈ App Icons</p>
+        <div class="app-grid">
+
+            <!-- Emerald Gradient -->
+            <div class="app-item">
+                <svg class="app-icon" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="appGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981"/>
+                            <stop offset="50%" stop-color="#059669"/>
+                            <stop offset="100%" stop-color="#0d9488"/>
+                        </linearGradient>
+                        <filter id="shadow">
+                            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#059669" flood-opacity="0.4"/>
+                        </filter>
+                    </defs>
+                    <rect width="160" height="160" rx="38" fill="url(#appGrad)" filter="url(#shadow)"/>
+                    <g transform="translate(48, 48)">
+                        <path d="M 30 0 L 60 17 L 60 53 L 30 70 L 0 53 L 0 17 Z" fill="#ffffff" opacity="0.15"/>
+                        <path d="M 14 22 L 50 22 L 54 58 L 10 58 Z"
+                              fill="none" stroke="#ffffff" stroke-width="3.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 20 22 L 20 14 Q 20 6 32 6 Q 44 6 44 14 L 44 22"
+                              fill="none" stroke="#ffffff" stroke-width="3.5"
+                              stroke-linecap="round"/>
+                        <path d="M 24 34 L 40 34 L 30 42 L 40 42 L 26 50"
+                              fill="none" stroke="#fbbf24" stroke-width="2.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Gold Circle -->
+            <div class="app-item">
+                <svg class="app-icon" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="appGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fbbf24"/>
+                            <stop offset="100%" stop-color="#d97706"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="80" cy="80" r="80" fill="url(#appGrad2)"/>
+                    <g transform="translate(48, 48)">
+                        <path d="M 30 0 L 60 17 L 60 53 L 30 70 L 0 53 L 0 17 Z" fill="#ffffff" opacity="0.15"/>
+                        <path d="M 14 22 L 50 22 L 54 58 L 10 58 Z"
+                              fill="none" stroke="#ffffff" stroke-width="3.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 20 22 L 20 14 Q 20 6 32 6 Q 44 6 44 14 L 44 22"
+                              fill="none" stroke="#ffffff" stroke-width="3.5"
+                              stroke-linecap="round"/>
+                        <path d="M 24 34 L 40 34 L 30 42 L 40 42 L 26 50"
+                              fill="none" stroke="#ffffff" stroke-width="2.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Dark -->
+            <div class="app-item">
+                <svg class="app-icon" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="160" height="160" rx="38" fill="#0f172a"/>
+                    <g transform="translate(48, 48)">
+                        <path d="M 30 0 L 60 17 L 60 53 L 30 70 L 0 53 L 0 17 Z" fill="#10b981" opacity="0.2"/>
+                        <path d="M 14 22 L 50 22 L 54 58 L 10 58 Z"
+                              fill="none" stroke="#10b981" stroke-width="3.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 20 22 L 20 14 Q 20 6 32 6 Q 44 6 44 14 L 44 22"
+                              fill="none" stroke="#10b981" stroke-width="3.5"
+                              stroke-linecap="round"/>
+                        <path d="M 24 34 L 40 34 L 30 42 L 40 42 L 26 50"
+                              fill="none" stroke="#fbbf24" stroke-width="2.5"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- BRAND PALETTE -->
+    <!-- ============================================== -->
+    <div class="section">
+        <p class="section-title">◈ Brand Palette</p>
+        <div class="palette">
+            <div class="swatch">
+                <div class="color" style="background: linear-gradient(135deg, #10b981, #059669);"></div>
+                <p><b>#10B981</b><br>Emerald</p>
+            </div>
+            <div class="swatch">
+                <div class="color" style="background: linear-gradient(135deg, #059669, #0d9488);"></div>
+                <p><b>#059669</b><br>Deep Green</p>
+            </div>
+            <div class="swatch">
+                <div class="color" style="background: linear-gradient(135deg, #0d9488, #0891b2);"></div>
+                <p><b>#0D9488</b><br>Teal</p>
+            </div>
+            <div class="swatch">
+                <div class="color" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"></div>
+                <p><b>#FBBF24</b><br>Gold</p>
+            </div>
+            <div class="swatch">
+                <div class="color" style="background: #0f172a;"></div>
+                <p><b>#0F172A</b><br>Dark</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

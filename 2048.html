@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2048 Game</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:#faf8ef;min-height:100vh;padding:1rem;font-family:'Segoe UI',system-ui,sans-serif;margin:0;display:flex;align-items:center;justify-content:center;color:#776e65}
+body[data-bs-theme="dark"]{background:#1e1b4b;color:#e5e7eb}
+.app{width:100%;max-width:460px}
+
+/* Top Bar */
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.app-title{font-weight:900;font-size:2.2rem;margin:0;color:#776e65}
+body[data-bs-theme="dark"] .app-title{color:#fff}
+
+.scores{display:flex;gap:.5rem}
+.score-box{background:#bbada0;border-radius:8px;padding:.4rem 1rem;text-align:center;color:#fff;min-width:80px}
+.score-label{font-size:.7rem;font-weight:700;text-transform:uppercase;opacity:.8;letter-spacing:1px}
+.score-value{font-size:1.2rem;font-weight:800}
+
+/* Buttons */
+.actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.btn-new{background:#8f7a66;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-weight:700;font-size:.9rem;cursor:pointer;transition:background .15s}
+.btn-new:hover{background:#9f8b77;color:#fff}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:none;background:#cdc1b4;color:#776e65;font-size:1rem;cursor:pointer;transition:all .15s}
+body[data-bs-theme="dark"] .icon-btn{background:#334155;color:#e5e7eb}
+
+/* Game Board */
+.board-wrap{position:relative;background:#bbada0;border-radius:12px;padding:12px;aspect-ratio:1;touch-action:none}
+body[data-bs-theme="dark"] .board-wrap{background:#334155}
+
+.grid-bg{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:12px;height:100%;width:100%}
+.grid-cell{background:rgba(238,228,218,0.35);border-radius:8px}
+body[data-bs-theme="dark"] .grid-cell{background:rgba(255,255,255,0.05)}
+
+/* Tiles */
+.tiles-container{position:absolute;inset:12px;pointer-events:none}
+.tile{position:absolute;display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:8px;transition:transform .1s ease-in-out, opacity .1s;background:#eee4da;color:#776e65}
+
+/* Tile Colors */
+.tile[data-val="2"]{background:#eee4da}
+.tile[data-val="4"]{background:#ede0c8}
+.tile[data-val="8"]{background:#f2b179;color:#f9f6f2}
+.tile[data-val="16"]{background:#f59563;color:#f9f6f2}
+.tile[data-val="32"]{background:#f67c5f;color:#f9f6f2}
+.tile[data-val="64"]{background:#f65e3b;color:#f9f6f2}
+.tile[data-val="128"]{background:#edcf72;color:#f9f6f2}
+.tile[data-val="256"]{background:#edcc61;color:#f9f6f2}
+.tile[data-val="512"]{background:#edc850;color:#f9f6f2}
+.tile[data-val="1024"]{background:#edc53f;color:#f9f6f2;font-size:1.5rem}
+.tile[data-val="2048"]{background:#edc22e;color:#f9f6f2;font-size:1.5rem;box-shadow:0 0 20px rgba(237,194,46,0.5)}
+.tile[data-val="4096"], .tile[data-val="8192"]{background:#3c3a32;color:#f9f6f2;font-size:1.3rem}
+
+/* Overlay */
+.overlay{position:absolute;inset:0;background:rgba(238,228,218,0.8);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(2px)}
+body[data-bs-theme="dark"] .overlay{background:rgba(30,27,75,0.8)}
+.overlay.show{opacity:1;pointer-events:all}
+.overlay h2{font-weight:900;font-size:2.5rem;color:#776e65;margin-bottom:1rem}
+body[data-bs-theme="dark"] .overlay h2{color:#fff}
+
+@media(max-width:400px){.app-title{font-size:1.8rem}.score-box{min-width:65px;padding:.3rem .6rem}.score-value{font-size:1rem}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top-bar">
+    <h1 class="app-title">2048</h1>
+    <div class="scores">
+      <div class="score-box">
+        <div class="score-label">Score</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-box">
+        <div class="score-label">Best</div>
+        <div class="score-value" id="bestScore">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <div style="font-size:.85rem;font-weight:600">Join tiles to reach <strong>2048!</strong></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="icon-btn" id="themeBtn"><i class="bi bi-moon-stars"></i></button>
+      <button class="btn-new" id="newGameBtn"><i class="bi bi-arrow-clockwise me-1"></i>New Game</button>
+    </div>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="grid-bg">
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+    </div>
+    <div class="tiles-container" id="tilesContainer"></div>
+    
+    <div class="overlay" id="overlay">
+      <h2 id="overlayTitle">You Win!</h2>
+      <button class="btn-new" id="overlayBtn" style="font-size:1.2rem;padding:.75rem 1.5rem">Keep Playing</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================
+   2048 GAME LOGIC
+   ============================================ */
+
+const SIZE = 4;
+let board = [];
+let score = 0;
+let bestScore = parseInt(localStorage.getItem('2048-best') || '0');
+let gameOver = false;
+let won = false;
+let keepPlaying = false;
+let theme = localStorage.getItem('2048-theme') || 'light';
+
+// DOM Elements
+const tilesContainer = document.getElementById('tilesContainer');
+const boardWrap = document.getElementById('boardWrap');
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlayTitle');
+const overlayBtn = document.getElementById('overlayBtn');
+
+// ---------- INITIALIZATION ----------
+function initBoard() {
+  board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  score = 0;
+  gameOver = false;
+  won = false;
+  keepPlaying = false;
+  overlay.classList.remove('show');
+  addRandomTile();
+  addRandomTile();
+  updateUI();
+  saveGame();
+}
+
+// ---------- GAME ACTIONS ----------
+function addRandomTile() {
+  const emptyCells = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (board[r][c] === 0) emptyCells.push({ r, c });
+    }
+  }
+  if (emptyCells.length === 0) return;
+  
+  const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  board[cell.r][cell.c] = Math.random() < 0.9 ? 2 : 4;
+}
+
+// Rotate matrix 90 degrees clockwise
+function rotateBoard() {
+  const newBoard = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      newBoard[c][SIZE - 1 - r] = board[r][c];
+    }
+  }
+  board = newBoard;
+}
+
+// Slide and Merge LEFT
+function slideLeft() {
+  let moved = false;
+  for (let r = 0; r < SIZE; r++) {
+    let row = board[r].filter(v => v !== 0); // Remove zeros
+    let newRow = [];
+    
+    for (let i = 0; i < row.length; i++) {
+      if (row[i] === row[i + 1]) {
+        newRow.push(row[i] * 2);
+        score += row[i] * 2;
+        if (row[i] * 2 === 2048 && !won) won = true;
+        i++; // Skip next
+      } else {
+        newRow.push(row[i]);
+      }
+    }
+    
+    while (newRow.length < SIZE) newRow.push(0);
+    
+    if (newRow.join(',') !== board[r].join(',')) moved = true;
+    board[r] = newRow;
+  }
+  return moved;
+}
+
+// Move Logic Wrapper
+function move(direction) {
+  if (gameOver || (won && !keepPlaying)) return;
+  
+  const oldBoardStr = board.flat().join(',');
+  let rotations = 0;
+  
+  // Rotate to make it always slide left
+  if (direction === 'up') rotations = 1;
+  else if (direction === 'right') rotations = 2;
+  else if (direction === 'down') rotations = 3;
+  
+  for (let i = 0; i < rotations; i++) rotateBoard();
+  
+  slideLeft();
+  
+  // Rotate back to original orientation
+  for (let i = 0; i < (4 - rotations) % 4; i++) rotateBoard();
+  
+  // Check if board changed
+  if (oldBoardStr !== board.flat().join(',')) {
+    addRandomTile();
+    updateUI();
+    saveGame();
+    
+    if (won && !keepPlaying) {
+      showOverlay('You Win!', 'Keep Playing');
+    } else if (checkGameOver()) {
+      gameOver = true;
+      showOverlay('Game Over!', 'Try Again');
+    }
+  }
+}
+
+// ---------- CHECK GAME OVER ----------
+function checkGameOver() {
+  // Check empty cells
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (board[r][c] === 0) return false;
+    }
+  }
+  // Check possible merges
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (r < SIZE - 1 && board[r][c] === board[r + 1][c]) return false;
+      if (c < SIZE - 1 && board[r][c] === board[r][c + 1]) return false;
+    }
+  }
+  return true;
+}
+
+// ---------- UI UPDATE ----------
+function updateUI() {
+  // Update Scores
+  document.getElementById('score').textContent = score;
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('2048-best', bestScore);
+  }
+  document.getElementById('bestScore').textContent = bestScore;
+
+  // Clear tiles
+  tilesContainer.innerHTML = '';
+  
+  // Calculate exact gap and tile size based on container width
+  const containerWidth = boardWrap.clientWidth - 24; // 24px is padding (12px * 2)
+  const gap = 12;
+  const cellSize = (containerWidth - (gap * 3)) / 4;
+  
+  // Draw tiles
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const val = board[r][c];
+      if (val !== 0) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.dataset.val = val;
+        tile.textContent = val;
+        
+        // Responsive font size
+        const fontSize = val >= 1024 ? cellSize * 0.35 : val >= 100 ? cellSize * 0.4 : cellSize * 0.45;
+        tile.style.fontSize = fontSize + 'px';
+        
+        // Position
+        tile.style.width = cellSize + 'px';
+        tile.style.height = cellSize + 'px';
+        tile.style.left = (c * (cellSize + gap)) + 'px';
+        tile.style.top = (r * (cellSize + gap)) + 'px';
+        
+        // Animation
+        tile.style.transform = 'scale(0)';
+        tilesContainer.appendChild(tile);
+        
+        // Trigger reflow for animation
+        void tile.offsetWidth;
+        tile.style.transform = 'scale(1)';
+      }
+    }
+  }
+}
+
+function showOverlay(title, btnText) {
+  overlayTitle.textContent = title;
+  overlayBtn.textContent = btnText;
+  overlay.classList.add('show');
+}
+
+// ---------- SAVE / LOAD ----------
+function saveGame() {
+  localStorage.setItem('2048-state', JSON.stringify({ board, score }));
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('2048-state');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      board = data.board;
+      score = data.score;
+      if (board.flat().includes(2048)) {
+        won = true;
+        keepPlaying = true;
+      }
+      updateUI();
+      return true;
+    } catch (e) {}
+  }
+  return false;
+}
+
+// ---------- CONTROLS ----------
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  const keys = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right',
+    W: 'up', S: 'down', A: 'left', D: 'right'
+  };
+  if (keys[e.key]) {
+    e.preventDefault();
+    move(keys[e.key]);
+  }
+});
+
+// Touch Swipe
+let touchStart = null;
+boardWrap.addEventListener('touchstart', (e) => {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+
+boardWrap.addEventListener('touchend', (e) => {
+  if (!touchStart) return;
+  const touch = e.changedTouches[0];
+  const dx = touch.clientX - touchStart.x;
+  const dy = touch.clientY - touchStart.y;
+  const threshold = 30;
+  
+  if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      move(dx > 0 ? 'right' : 'left');
+    } else {
+      move(dy > 0 ? 'down' : 'up');
+    }
+  }
+  touchStart = null;
+}, { passive: true });
+
+// Buttons
+document.getElementById('newGameBtn').onclick = () => {
+  if(confirm('Start a new game?')) initBoard();
+};
+
+overlayBtn.onclick = () => {
+  if (won && !gameOver) {
+    keepPlaying = true;
+    overlay.classList.remove('show');
+  } else {
+    initBoard();
+  }
+};
+
+// Theme
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('2048-theme', theme);
+  applyTheme();
+  setTimeout(updateUI, 100); // Recalculate sizes if theme changes padding
+};
+
+// Resize
+window.addEventListener('resize', updateUI);
+
+// ---------- START ----------
+applyTheme();
+if (!loadGame()) {
+  initBoard();
+}
+</script>
+</body>
+</html>

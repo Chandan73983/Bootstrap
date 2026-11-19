@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chatbot</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(160deg,#667eea,#764ba2);min-height:100vh;padding:0;font-family:system-ui;margin:0;overflow:hidden}
+body[data-bs-theme="dark"]{background:linear-gradient(160deg,#1e1b4b,#0f172a)}
+.app{max-width:720px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:#fff}
+body[data-bs-theme="dark"] .app{background:#0f172a;color:#e5e7eb}
+
+.header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:.85rem 1rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.header h5{margin:0;font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:.5rem}
+.status-dot{width:8px;height:8px;background:#4ade80;border-radius:50%;box-shadow:0 0 8px #4ade80;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:.95rem;cursor:pointer;transition:all .15s;margin-left:.25rem}
+.icon-btn:hover{background:rgba(255,255,255,.3)}
+.icon-btn.active{background:#4ade80;color:#0f172a}
+
+.persona-bar{padding:.5rem .75rem;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;gap:.4rem;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.persona-bar::-webkit-scrollbar{display:none}
+body[data-bs-theme="dark"] .persona-bar{background:#1e293b;border-color:#334155}
+.persona-btn{padding:.4rem .9rem;border-radius:50px;border:2px solid #e5e7eb;background:#fff;color:#6b7280;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+body[data-bs-theme="dark"] .persona-btn{background:#334155;border-color:#475569;color:#cbd5e1}
+.persona-btn.active{background:#667eea;border-color:#667eea;color:#fff}
+
+.chat{flex-grow:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;background:#f3f4f6}
+body[data-bs-theme="dark"] .chat{background:#0f172a}
+
+.msg{max-width:85%;padding:.7rem 1rem;border-radius:18px;font-size:.92rem;line-height:1.45;word-wrap:break-word;position:relative;animation:msgIn .25s ease-out}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;background:#667eea;color:#fff;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:#fff;color:#1f2937;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+body[data-bs-theme="dark"] .msg.ai{background:#1e293b;color:#e5e7eb}
+.msg.ai code{background:#f3f4f6;padding:.15rem .4rem;border-radius:6px;font-size:.85rem;color:#dc2626}
+body[data-bs-theme="dark"] .msg.ai code{background:#334155;color:#f472b6}
+.msg.ai pre{background:#1e293b;color:#e5e7eb;padding:.75rem;border-radius:10px;overflow-x:auto;font-size:.82rem;margin:.5rem 0;white-space:pre-wrap;word-break:break-word}
+.msg-actions{display:flex;gap:.3rem;margin-top:.4rem;opacity:.5;transition:opacity .2s}
+.msg:hover .msg-actions{opacity:1}
+.msg-action{background:none;border:none;color:inherit;font-size:.75rem;cursor:pointer;padding:.15rem .35rem;border-radius:6px}
+.msg-action:hover{background:rgba(0,0,0,.08)}
+body[data-bs-theme="dark"] .msg-action:hover{background:rgba(255,255,255,.08)}
+
+.typing{align-self:flex-start;background:#fff;padding:.75rem 1rem;border-radius:18px;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+body[data-bs-theme="dark"] .typing{background:#1e293b}
+.typing-dots{display:flex;gap:4px}
+.typing-dots span{width:7px;height:7px;background:#9ca3af;border-radius:50%;animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+.welcome{text-align:center;padding:1.5rem 1rem;color:#6b7280;margin-top:auto;margin-bottom:auto}
+body[data-bs-theme="dark"] .welcome{color:#94a3b8}
+.welcome-icon{font-size:3.5rem;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-block;margin-bottom:.75rem}
+.welcome h4{font-weight:800;color:#1f2937;margin-bottom:.5rem}
+body[data-bs-theme="dark"] .welcome h4{color:#e5e7eb}
+.suggestion{padding:.6rem .9rem;background:#fff;border-radius:12px;margin:.35rem 0;cursor:pointer;border:1px solid #e5e7eb;transition:all .15s;text-align:left;font-size:.85rem}
+body[data-bs-theme="dark"] .suggestion{background:#1e293b;border-color:#334155;color:#cbd5e1}
+.suggestion:hover{border-color:#667eea;color:#667eea}
+
+.input-area{padding:.75rem 1rem;background:#fff;border-top:1px solid #e5e7eb;display:flex;gap:.5rem;align-items:flex-end;flex-shrink:0}
+body[data-bs-theme="dark"] .input-area{background:#1e293b;border-color:#334155}
+.chat-input{flex-grow:1;border-radius:20px;border:1px solid #e5e7eb;padding:.6rem 1rem;font-size:.92rem;resize:none;max-height:120px;font-family:inherit;outline:none;background:#f9fafb;color:#1f2937;line-height:1.4}
+.chat-input:focus{border-color:#667eea;background:#fff}
+body[data-bs-theme="dark"] .chat-input{background:#0f172a;border-color:#334155;color:#e5e7eb}
+body[data-bs-theme="dark"] .chat-input:focus{background:#0f172a;border-color:#667eea}
+.send-btn{width:44px;height:44px;border-radius:50%;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1.1rem;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.send-btn:hover:not(:disabled){transform:scale(1.05)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.mic-btn{width:44px;height:44px;border-radius:50%;border:none;background:#f3f4f6;color:#6b7280;font-size:1rem;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+body[data-bs-theme="dark"] .mic-btn{background:#334155;color:#cbd5e1}
+.mic-btn.listening{background:#ef4444;color:#fff;animation:pulseMic 1s infinite}
+@keyframes pulseMic{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+.toast-mini{position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:.6rem 1.25rem;border-radius:50px;font-weight:600;font-size:.85rem;box-shadow:0 8px 20px rgba(16,185,129,.4);z-index:9999;animation:slideDown .3s}
+@keyframes slideDown{from{transform:translate(-50%,-100%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h5><span class="status-dot"></span>AI Chatbot</h5>
+    <div>
+      <button class="icon-btn" id="ttsBtn" title="Voice output"><i class="bi bi-volume-mute"></i></button>
+      <button class="icon-btn" id="clearBtn" title="Clear chat"><i class="bi bi-trash"></i></button>
+      <button class="icon-btn" id="themeBtn" title="Theme"><i class="bi bi-moon-stars"></i></button>
+    </div>
+  </div>
+
+  <div class="persona-bar">
+    <button class="persona-btn active" data-persona="assistant">🤖 Assistant</button>
+    <button class="persona-btn" data-persona="teacher">📚 Teacher</button>
+    <button class="persona-btn" data-persona="comedian">😂 Comedian</button>
+    <button class="persona-btn" data-persona="friend">😊 Friend</button>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input-area">
+    <textarea class="chat-input" id="input" placeholder="Ask me anything..." rows="1"></textarea>
+    <button class="mic-btn" id="micBtn" title="Voice input"><i class="bi bi-mic-fill"></i></button>
+    <button class="send-btn" id="sendBtn" disabled><i class="bi bi-send-fill"></i></button>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================
+   AI CHATBOT - Pollinations.ai (POST endpoint)
+   ============================================ */
+
+const PERSONAS = {
+  assistant: {
+    emoji: '🤖',
+    system: 'You are a helpful, concise AI assistant. Answer clearly and briefly in 2-4 sentences. If user writes in Hindi, reply in Hindi.'
+  },
+  teacher: {
+    emoji: '📚',
+    system: 'You are a patient teacher. Explain concepts simply with examples and analogies. Keep answers friendly but educational. 3-5 sentences.'
+  },
+  comedian: {
+    emoji: '😂',
+    system: 'You are a funny comedian. Reply with humor and wit. Add a joke when possible. Keep it light and fun. 2-3 sentences.'
+  },
+  friend: {
+    emoji: '😊',
+    system: 'You are a warm, casual friend. Chat naturally and supportively. Use casual language. 2-3 sentences.'
+  }
+};
+
+let messages = [];
+try { messages = JSON.parse(localStorage.getItem('ai-chat-v2') || '[]'); } catch(e) { messages = []; }
+let persona = 'assistant';
+let ttsEnabled = false;
+let isThinking = false;
+let theme = localStorage.getItem('ai-theme') || 'light';
+let recognition = null;
+let isListening = false;
+
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
+const ttsBtn = document.getElementById('ttsBtn');
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+function formatMessage(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/```([\s\S]*?)```/g, (_, code) => `<pre>${code.trim()}</pre>`);
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function render() {
+  if (messages.length === 0) {
+    chat.innerHTML = `
+      <div class="welcome">
+        <div class="welcome-icon"><i class="bi bi-robot"></i></div>
+        <h4>Hi! I'm your AI assistant</h4>
+        <p style="font-size:.9rem;margin-bottom:1rem">Ask me anything — powered by real AI</p>
+        <div class="suggestion" data-q="Explain quantum physics in simple terms">💡 Explain quantum physics simply</div>
+        <div class="suggestion" data-q="Write a short poem about rain">✍️ Write a poem about rain</div>
+        <div class="suggestion" data-q="What is the capital of Japan?">🌏 Capital of Japan?</div>
+        <div class="suggestion" data-q="Give me 3 tips to be more productive">⚡ 3 productivity tips</div>
+      </div>
+    `;
+    chat.querySelectorAll('.suggestion').forEach(s => {
+      s.onclick = () => { input.value = s.dataset.q; input.dispatchEvent(new Event('input')); send(); };
+    });
+    return;
+  }
+
+  chat.innerHTML = messages.map((m, i) => `
+    <div class="msg ${m.role === 'user' ? 'user' : 'ai'}">
+      <div class="msg-content">${m.role === 'user' ? escapeHtml(m.content) : formatMessage(m.content)}</div>
+      <div class="msg-actions">
+        <button class="msg-action" data-copy="${i}"><i class="bi bi-clipboard"></i></button>
+        ${m.role === 'assistant' ? `<button class="msg-action" data-speak="${i}"><i class="bi bi-volume-up"></i></button>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  chat.querySelectorAll('[data-copy]').forEach(b => {
+    b.onclick = () => {
+      const idx = parseInt(b.dataset.copy);
+      navigator.clipboard.writeText(messages[idx].content).then(() => showToast('Copied!')).catch(()=>{});
+    };
+  });
+  chat.querySelectorAll('[data-speak]').forEach(b => {
+    b.onclick = () => speak(messages[parseInt(b.dataset.speak)].content);
+  });
+
+  if (isThinking) addTypingIndicator();
+  scrollBottom();
+}
+
+function addTypingIndicator() {
+  if (document.getElementById('typingIndicator')) return;
+  const el = document.createElement('div');
+  el.className = 'typing';
+  el.id = 'typingIndicator';
+  el.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chat.appendChild(el);
+  scrollBottom();
+}
+
+function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
+
+// ============================================
+// SEND MESSAGE
+// ============================================
+async function send() {
+  const text = input.value.trim();
+  if (!text || isThinking) return;
+
+  messages.push({ role: 'user', content: text });
+  input.value = '';
+  input.style.height = 'auto';
+  sendBtn.disabled = true;
+  save();
+  render();
+
+  isThinking = true;
+  addTypingIndicator();
+
+  try {
+    const reply = await askAI(text);
+
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+
+    messages.push({ role: 'assistant', content: reply });
+    save();
+    isThinking = false;
+    render();
+    scrollBottom();
+
+    if (ttsEnabled) speak(reply);
+
+  } catch (err) {
+    console.error('AI error:', err);
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+
+    messages.push({
+      role: 'assistant',
+      content: '⚠️ Network issue. Please check your internet connection and try again.'
+    });
+    isThinking = false;
+    save();
+    render();
+  }
+}
+
+// ============================================
+// AI API CALL — POST endpoint (no URL limit, no CORS issue)
+// ============================================
+async function askAI(userMessage) {
+  const personaData = PERSONAS[persona];
+
+  const apiMessages = [
+    { role: 'system', content: personaData.system }
+  ];
+
+  // Last 4 messages for context
+  messages.slice(-5, -1).forEach(m => {
+    apiMessages.push({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content
+    });
+  });
+
+  apiMessages.push({ role: 'user', content: userMessage });
+
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai',
+      messages: apiMessages
+    })
+  });
+
+  if (!res.ok) {
+    throw new Error('HTTP ' + res.status);
+  }
+
+  const data = await res.json();
+
+  // Handle different response shapes
+  if (data && data.choices && data.choices[0] && data.choices[0].message) {
+    return data.choices[0].message.content.trim();
+  }
+  if (typeof data === 'string') return data;
+
+  throw new Error('Invalid AI response');
+}
+
+// ============================================
+// TEXT TO SPEECH
+// ============================================
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[*`#]/g, '').replace(/<[^>]+>/g, '').slice(0, 500);
+  const utter = new SpeechSynthesisUtterance(clean);
+  utter.rate = 1;
+  utter.pitch = 1;
+  utter.lang = /[\u0900-\u097F]/.test(clean) ? 'hi-IN' : 'en-US';
+  speechSynthesis.speak(utter);
+}
+
+// ============================================
+// VOICE INPUT
+// ============================================
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { micBtn.style.display = 'none'; return; }
+
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    input.value = transcript;
+    autoResize();
+    sendBtn.disabled = !input.value.trim();
+    setTimeout(send, 100);
+  };
+  recognition.onerror = () => { isListening = false; micBtn.classList.remove('listening'); };
+  recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); };
+}
+
+micBtn.onclick = () => {
+  if (!recognition) { showToast('Voice not supported'); return; }
+  if (isListening) recognition.stop();
+  else { try { recognition.start(); } catch(e){} }
+};
+
+function autoResize() {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+}
+
+input.addEventListener('input', () => {
+  autoResize();
+  sendBtn.disabled = !input.value.trim() || isThinking;
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+sendBtn.onclick = send;
+
+document.querySelectorAll('.persona-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    persona = btn.dataset.persona;
+    showToast(`${PERSONAS[persona].emoji} ${btn.textContent.trim()}`);
+  };
+});
+
+ttsBtn.onclick = () => {
+  ttsEnabled = !ttsEnabled;
+  ttsBtn.classList.toggle('active', ttsEnabled);
+  ttsBtn.innerHTML = ttsEnabled ? '<i class="bi bi-volume-up-fill"></i>' : '<i class="bi bi-volume-mute"></i>';
+  showToast(ttsEnabled ? '🔊 Voice on' : '🔇 Voice off');
+};
+
+document.getElementById('clearBtn').onclick = () => {
+  if (messages.length === 0) return;
+  if (!confirm('Clear entire chat?')) return;
+  messages = [];
+  save();
+  render();
+  showToast('Chat cleared');
+};
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  document.getElementById('themeBtn').innerHTML = theme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+}
+document.getElementById('themeBtn').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('ai-theme', theme);
+  applyTheme();
+};
+
+function save() {
+  try { localStorage.setItem('ai-chat-v2', JSON.stringify(messages.slice(-50))); } catch(e){}
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast-mini';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+applyTheme();
+initVoice();
+render();
+scrollBottom();
+</script>
+</body>
+</html>

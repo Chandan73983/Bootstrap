@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chandan Prajapati - Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e5e7eb;
+            padding: 30px 15px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .resume {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #fff;
+            padding: 35px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .header-left .role {
+            font-size: 15px;
+            font-weight: 500;
+            opacity: 0.9;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .header-right .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* ========== BODY ========== */
+        .body {
+            padding: 35px 40px;
+        }
+
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1e3a8a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: #facc15;
+            border-radius: 2px;
+        }
+
+        /* Objective */
+        .objective {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.7;
+            background: #f8fafc;
+            padding: 15px 18px;
+            border-left: 4px solid #1e3a8a;
+            border-radius: 6px;
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .skill-category {
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .skill-category h4 {
+            font-size: 13px;
+            color: #1e3a8a;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .skill-category p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Education */
+        .edu-item {
+            margin-bottom: 15px;
+            padding-left: 18px;
+            border-left: 3px solid #e5e7eb;
+            position: relative;
+        }
+
+        .edu-item::before {
+            content: "";
+            position: absolute;
+            left: -7px;
+            top: 5px;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #1e3a8a;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #1e3a8a;
+        }
+
+        .edu-item h3 {
+            font-size: 15px;
+            color: #111827;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .edu-item .meta {
+            font-size: 13px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .edu-item .meta strong {
+            color: #1e3a8a;
+        }
+
+        /* Certification */
+        .cert-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 10px;
+            padding: 18px 20px;
+            border-left: 4px solid #d97706;
+            margin-bottom: 15px;
+        }
+
+        .cert-box h3 {
+            font-size: 15px;
+            color: #92400e;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .cert-box p {
+            font-size: 13px;
+            color: #78350f;
+            line-height: 1.6;
+        }
+
+        .cert-box .grade {
+            display: inline-block;
+            background: #d97706;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* Projects */
+        .project-item {
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .project-item h3 {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .project-item p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Languages */
+        .lang-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .lang-badge {
+            background: #eff6ff;
+            color: #1e3a8a;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 25px 20px;
+            }
+
+            .header-right {
+                text-align: center;
+            }
+
+            .header-right .contact-item {
+                justify-content: center;
+            }
+
+            .header-left h1 {
+                font-size: 26px;
+            }
+
+            .body {
+                padding: 25px 20px;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px 8px;
+            }
+
+            .header-left h1 {
+                font-size: 22px;
+            }
+
+            .header-left .role {
+                font-size: 13px;
+            }
+
+            .section-title {
+                font-size: 13px;
+            }
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .resume {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="resume">
+
+        <!-- ========== HEADER ========== -->
+        <div class="header">
+            <div class="header-left">
+                <h1>Chandan Prajapati</h1>
+                <div class="role">Web Developer | Digital Marketer</div>
+            </div>
+            <div class="header-right">
+                <div class="contact-item">📧 <span>your-email@gmail.com</span></div>
+                <div class="contact-item">📱 <span>+91 XXXXX XXXXX</span></div>
+                <div class="contact-item">📍 <span>Delhi, India</span></div>
+                <div class="contact-item">🔗 <span>github.com/yourusername</span></div>
+            </div>
+        </div>
+
+        <!-- ========== BODY ========== -->
+        <div class="body">
+
+            <!-- OBJECTIVE -->
+            <div class="section">
+                <div class="section-title">Career Objective</div>
+                <div class="objective">
+                    Motivated and detail-oriented fresher with a strong foundation in
+                    Web Development (Frontend & Backend) and Digital Marketing.
+                    Seeking an opportunity to apply my technical skills in HTML, CSS,
+                    JavaScript, React.js, PHP, MySQL, and SEO to contribute to a
+                    dynamic organization while continuously learning and growing.
+                </div>
+            </div>
+
+            <!-- SKILLS -->
+            <div class="section">
+                <div class="section-title">Technical Skills</div>
+                <div class="skills-grid">
+
+                    <div class="skill-category">
+                        <h4>🌐 Frontend</h4>
+                        <p>HTML5, CSS3, JavaScript, React.js, Angular.js, Responsive Design, Flexbox, CSS Grid</p>
+                    </div>
+
+                    <div class="skill-category">
+                        <h4>⚙️ Backend</h4>
+                        <p>PHP, Node.js Basics, REST API, Middleware, Routing, JSON</p>
+                    </div>
+
+                    <div class="skill-category">
+                        <h4>🗄️ Database</h4>
+                        <p>MySQL, MySQL Workbench, PostgreSQL, MongoDB, CRUD Operations</p>
+                    </div>
+
+                    <div class="skill-category">
+                        <h4>🎨 Design</h4>
+                        <p>CorelDraw, Photoshop, Illustrator, InDesign, Canva</p>
+                    </div>
+
+                    <div class="skill-category">
+                        <h4>📈 Digital Marketing</h4>
+                        <p>SEO, SMO, Google Analytics, Social Media Marketing</p>
+                    </div>
+
+                    <div class="skill-category">
+                        <h4>🔧 Tools</h4>
+                        <p>Git & GitHub, VS Code, MS Office, Tally Prime (Accounts, GST, TDS)</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- EDUCATION -->
+            <div class="section">
+                <div class="section-title">Education</div>
+
+                <div class="edu-item">
+                    <h3>Hons. Diploma in Computer Application</h3>
+                    <div class="meta">
+                        <span>Nice Web Technologies, Delhi</span>
+                        <span><strong>Grade: A</strong></span>
+                    </div>
+                    <div class="meta">
+                        <span>Aug 2023 – Aug 2024 (12 Months)</span>
+                        <span>Auth No: NWT54801/910/23</span>
+                    </div>
+                </div>
+
+                <div class="edu-item">
+                    <h3>12th (Senior Secondary)</h3>
+                    <div class="meta">
+                        <span>School Name, Board</span>
+                        <span><strong>Year: XXXX</strong></span>
+                    </div>
+                </div>
+
+                <div class="edu-item">
+                    <h3>10th (Secondary)</h3>
+                    <div class="meta">
+                        <span>School Name, Board</span>
+                        <span><strong>Year: XXXX</strong></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CERTIFICATION -->
+            <div class="section">
+                <div class="section-title">Certification</div>
+                <div class="cert-box">
+                    <h3>📜 Hons. Diploma in Computer Application</h3>
+                    <p>
+                        <strong>Nice Web Technologies</strong>, Jahangir Puri, Delhi<br>
+                        Duration: Aug 2023 – Aug 2024<br>
+                        Covered: Web Development, Frontend, Backend, Databases,
+                        Graphic Designing, Digital Marketing, AI in Python.
+                    </p>
+                    <span class="grade">Grade: A</span>
+                </div>
+            </div>
+
+            <!-- PROJECTS -->
+            <div class="section">
+                <div class="section-title">Projects</div>
+
+                <div class="project-item">
+                    <h3>🛒 E-commerce Website</h3>
+                    <p>
+                        Built a full-stack shopping website using PHP, MySQL, HTML, CSS,
+                        and JavaScript. Features: User login, product listing, cart,
+                        checkout, order management.
+                    </p>
+                </div>
+
+                <div class="project-item">
+                    <h3>🏥 Hospital Management System</h3>
+                    <p>
+                        Designed a database-driven system with PHP & MySQL for managing
+                        patients, doctors, and appointments using proper foreign key
+                        relationships.
+                    </p>
+                </div>
+
+                <div class="project-item">
+                    <h3>💼 Portfolio Website</h3>
+                    <p>
+                        Created a responsive personal portfolio using React.js and CSS
+                        with modern UI, dark mode, and smooth animations.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- LANGUAGES -->
+            <div class="section">
+                <div class="section-title">Languages</div>
+                <div class="lang-row">
+                    <span class="lang-badge">Hindi</span>
+                    <span class="lang-badge">English</span>
+                </div>
+            </div>
+
+            <!-- HOBBIES -->
+            <div class="section">
+                <div class="section-title">Interests</div>
+                <div class="lang-row">
+                    <span class="lang-badge">Web Development</span>
+                    <span class="lang-badge">UI/UX Design</span>
+                    <span class="lang-badge">Digital Marketing</span>
+                    <span class="lang-badge">Learning New Tech</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Thank you for reviewing my resume · Chandan Prajapati
+        </div>
+
+    </div>
+
+</body>
+</html>
